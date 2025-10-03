@@ -2,8 +2,8 @@ import "./card-mod";
 
 import "./patch/hui-card";
 import "./patch/ha-card";
+import "./patch/hui-section";
 import "./patch/hui-badge";
-
 import "./patch/hui-entities-card";
 import "./patch/hui-glance-card";
 import "./patch/hui-picture-elements-card";

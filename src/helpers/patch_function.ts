@@ -55,7 +55,8 @@ export function patch_elements(elements, afterwards?) {
       patch_prototype(element, constructor, afterwards);
     });
   };
-  
+}
+
 function patch_warning(key) {
   if ((window as any).cm_patch_warning) return;
   (window as any).cm_patch_warning = true;

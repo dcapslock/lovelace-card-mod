@@ -48,15 +48,6 @@ export function patch_element(element, afterwards?) {
   };
 }
 
-// Decorator for patching a mutltiple custom-elements with same patch
-export function patch_elements(elements, afterwards?) {
-  return function patched(constructor) {
-    elements.forEach((element) => {
-      patch_prototype(element, constructor, afterwards);
-    });
-  };
-}
-
 function patch_warning(key) {
   if ((window as any).cm_patch_warning) return;
   (window as any).cm_patch_warning = true;

@@ -1,8 +1,14 @@
 import "./card-mod";
+
+import "./patch/hui-card";
 import "./patch/ha-card";
+import "./patch/hui-section";
+import "./patch/hui-badge";
 import "./patch/hui-entities-card";
 import "./patch/hui-glance-card";
-import "./patch/hui-state-label-badge";
+import "./patch/hui-picture-elements-card";
+
+import "./patch/ha-icon";
 import "./patch/hui-view";
 import "./patch/hui-root";
 import "./patch/ha-more-info-dialog";
@@ -10,8 +16,6 @@ import "./patch/ha-sidebar";
 import "./patch/hui-card-element-editor";
 import "./patch/ha-panel-config";
 import "./patch/ha-panel-developer-tools"
-import "./patch/hui-picture-elements-card";
-import "./patch/ha-icon";
 import "./mod-card";
 import "./theme-watcher";
 

@@ -14,6 +14,11 @@ import {
   CardModStyle,
 } from "./helpers/apply_card_mod";
 import { compare_deep, merge_deep } from "./helpers/dict_functions";
+import {
+  bind_js_template,
+  is_js_template,
+  unbind_js_template,
+} from "./helpers/javascript-templates";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -224,9 +229,17 @@ export class CardMod extends LitElement {
     this._styles = thisStyle;
     this.dynamicVariablesHaveChanged = false;
 
-    if (hasTemplate(this._styles)) {
+    if (hasTemplate(this._styles) || is_js_template(this._styles)) {
       this._renderer = this._renderer || this._style_rendered.bind(this);
-      bind_template(this._renderer, this._styles as string, this.variables);
+      if (is_js_template(this._styles)) {
+        bind_js_template(
+          this._renderer,
+          this._styles as string,
+          this.variables
+        );
+      } else {
+        bind_template(this._renderer, this._styles as string, this.variables);
+      }
     } else {
       this._style_rendered(this._styles || "");
     }
@@ -245,7 +258,10 @@ export class CardMod extends LitElement {
     this._observer.disconnect();
     this._styles = "";
     this.cancelStyleChild();
-    await unbind_template(this._renderer);
+    if (this._renderer) {
+      await unbind_template(this._renderer);
+      await unbind_js_template(this._renderer);
+    }
     this.card_mod_parent?.refresh?.();
   }
 

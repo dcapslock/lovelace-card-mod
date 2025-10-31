@@ -4,7 +4,7 @@ import {
   hasTemplate,
   bind_template,
   unbind_template,
-} from "./helpers/templates";
+} from "./helpers/jinja-templates";
 import pjson from "../package.json";
 import { get_theme } from "./helpers/themes";
 import { selectTree } from "./helpers/selecttree";

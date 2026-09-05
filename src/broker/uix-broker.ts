@@ -1229,7 +1229,7 @@ export class UixBroker {
     anchor.dispatchEvent(new CustomEvent("hass-action", {
       bubbles: true,
       composed: true,
-      detail: { config, action: "tap" },
+      detail: { config: { tap_action: config }, action: "tap" },
     }));
   }
 

@@ -1,3 +1,9 @@
+## [8.2.0-beta.16](https://github.com/Lint-Free-Technology/uix/compare/v8.2.0-beta.15...v8.2.0-beta.16) (2026-09-05)
+
+### 🐞 Bug Fixes
+
+* **broker:** Use correct Frontend action config for action directive ([ba6043a](https://github.com/Lint-Free-Technology/uix/commit/ba6043ac1b779111662c8f587a51af064e045202))
+
 ## [8.2.0-beta.15](https://github.com/Lint-Free-Technology/uix/compare/v8.2.0-beta.14...v8.2.0-beta.15) (2026-09-05)
 
 ### 🐞 Bug Fixes

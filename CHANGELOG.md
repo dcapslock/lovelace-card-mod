@@ -1,3 +1,10 @@
+## [8.2.0-beta.17](https://github.com/Lint-Free-Technology/uix/compare/v8.2.0-beta.16...v8.2.0-beta.17) (2026-09-07)
+
+### 🐞 Bug Fixes
+
+* **broker:** Remove reference to detached elements for anchor console helpers as well as button wrappers. Removes strong reference to detached DOM elements preventing them being garbage collected. ([2df5ebb](https://github.com/Lint-Free-Technology/uix/commit/2df5ebbdd4d7631ad46f607df3300848c5fb3c7d))
+* Remove event uix-update listener for detached uix-node preventing resource leak in edge case UIX Styling scenarios. ([f9db963](https://github.com/Lint-Free-Technology/uix/commit/f9db963e6e894510a31f29b691786222af11329b))
+
 ## [8.2.0-beta.16](https://github.com/Lint-Free-Technology/uix/compare/v8.2.0-beta.15...v8.2.0-beta.16) (2026-09-05)
 
 ### 🐞 Bug Fixes

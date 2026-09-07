@@ -476,8 +476,8 @@ export class UixBroker {
   private configurationVersion = 0;
   private anchorHistory: UixBrokerAnchorHistoryEntry[] = [];
   private activeInteractions = new Set<UixBrokerInteraction>();
-  private buttonWrappers = new Set<HTMLElement>();
-  private buttonWrappersByDirective = new WeakMap<UixBrokerDirective, HTMLElement>();
+  private buttonWrappers = new Map<UixBrokerDirective, HTMLElement>();
+  private retainedReferenceObservers = new Map<Node, MutationObserver>();
   private templateCache = new Map<string, TemplateCacheEntry>();
 
   configure(config: UixBrokerConfig | UixBrokerInteraction[]) {
@@ -776,6 +776,8 @@ export class UixBroker {
   }
 
   private rememberAnchor(interaction: UixBrokerInteraction, anchor: Element) {
+    this.pruneDetachedReferences();
+    if (!anchor.isConnected) return;
     this.anchorHistory = [
       {
         anchor,
@@ -786,6 +788,46 @@ export class UixBroker {
       },
       ...this.anchorHistory.filter((entry) => entry.anchor !== anchor),
     ].slice(0, 50);
+    this.refreshRetainedReferenceObservers();
+  }
+
+  /**
+   * Broker keeps anchors only for the developer console helper and keeps
+   * button wrappers only to update a previously inserted button. Neither
+   * needs to outlive its DOM subtree.
+   */
+  private pruneDetachedReferences() {
+    this.anchorHistory = this.anchorHistory.filter(({ anchor }) => anchor.isConnected);
+    for (const [directive, wrapper] of this.buttonWrappers) {
+      if (!wrapper.isConnected) this.buttonWrappers.delete(directive);
+    }
+    this.refreshRetainedReferenceObservers();
+  }
+
+  /**
+   * Document observers do not see mutations inside shadow roots, so observe
+   * each root currently containing a retained reference as well as document.
+   * Observers are disconnected as soon as there is nothing left to retain.
+   */
+  private refreshRetainedReferenceObservers() {
+    const roots = new Set<Node>();
+    if (this.anchorHistory.length || this.buttonWrappers.size) {
+      roots.add(document);
+      this.anchorHistory.forEach(({ anchor }) => roots.add(anchor.getRootNode()));
+      this.buttonWrappers.forEach((wrapper) => roots.add(wrapper.getRootNode()));
+    }
+
+    this.retainedReferenceObservers.forEach((observer, root) => {
+      if (roots.has(root)) return;
+      observer.disconnect();
+      this.retainedReferenceObservers.delete(root);
+    });
+    roots.forEach((root) => {
+      if (this.retainedReferenceObservers.has(root)) return;
+      const observer = new MutationObserver(() => this.pruneDetachedReferences());
+      observer.observe(root, { childList: true, subtree: true });
+      this.retainedReferenceObservers.set(root, observer);
+    });
   }
 
   private async resolveDirectiveAnchor(
@@ -1239,10 +1281,10 @@ export class UixBroker {
     const parent = target.parentElement || target.parentNode;
     if (!parent) return;
 
-    let wrapper = this.buttonWrappersByDirective.get(directive);
+    let wrapper = this.buttonWrappers.get(directive);
     if (wrapper && (!wrapper.isConnected || wrapper.parentNode !== parent)) {
       wrapper.remove();
-      this.buttonWrappers.delete(wrapper);
+      this.buttonWrappers.delete(directive);
       wrapper = undefined;
     }
 
@@ -1269,8 +1311,7 @@ export class UixBroker {
         dispatchHaButtonAction(button, button.uixBrokerButtonConfig ?? {}, event);
       }) as BrokerButtonElement;
       wrapper.appendChild(button);
-      this.buttonWrappers.add(wrapper);
-      this.buttonWrappersByDirective.set(directive, wrapper);
+      this.buttonWrappers.set(directive, wrapper);
     } else {
       button = wrapper.querySelector("ha-button") as BrokerButtonElement;
       if (!button) {
@@ -1286,6 +1327,7 @@ export class UixBroker {
     updateHaButton(button, button.uixBrokerButtonConfig);
     this.applyButtonStyle(button, directive.style, context);
     this.placeButton(wrapper, target, directive.before !== undefined);
+    this.refreshRetainedReferenceObservers();
   }
 
   private async resolveButtonTarget(directive: UixBrokerDirective, anchor: Element): Promise<Element | null> {
@@ -1366,7 +1408,7 @@ export class UixBroker {
   private removeButtons() {
     this.buttonWrappers.forEach((wrapper) => wrapper.remove());
     this.buttonWrappers.clear();
-    this.buttonWrappersByDirective = new WeakMap<UixBrokerDirective, HTMLElement>();
+    this.refreshRetainedReferenceObservers();
   }
 }
 

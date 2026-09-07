@@ -1,3 +1,9 @@
+## [8.2.0-beta.18](https://github.com/Lint-Free-Technology/uix/compare/v8.2.0-beta.17...v8.2.0-beta.18) (2026-09-07)
+
+### ⭐ New Features
+
+* **forge+broker:** Add `--uix-icon-button-background-color-hover` and `--uix-icon-button-background-opacity-hover` CSS styling variables. ([d41b62d](https://github.com/Lint-Free-Technology/uix/commit/d41b62d85fb2ca9cab79800fe22ceddd88443c81))
+
 ## [8.2.0-beta.17](https://github.com/Lint-Free-Technology/uix/compare/v8.2.0-beta.16...v8.2.0-beta.17) (2026-09-07)
 
 ### 🐞 Bug Fixes

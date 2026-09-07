@@ -45,7 +45,8 @@ export const HA_BUTTON_CSS = `
   }
   @media (hover: hover) {
     ha-button.uix-forge-spark-icon-button:hover:not([disabled])::after {
-      opacity: calc(var(--uix-icon-button-background-opacity, 0) + 0.1);
+      opacity: var(--uix-icon-button-background-opacity-hover, calc(var(--uix-icon-button-background-opacity, 0) + 0.1));
+      background-color: var(--uix-icon-button-background-color-hover, var(--uix-icon-button-background-color, currentColor));
     }
   }
 `;

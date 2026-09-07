@@ -110,7 +110,9 @@ element:
 | `--uix-button-label-text-wrap` | `wrap` | Sets the button label text wrap. Default for `ha-button` is `wrap`. Set to `nowrap` if you wish for your labels to not wrap. This may or may not be needed based on the element in which the button is placed. You will need to set on a tile card like shown in the examples below. |
 | `--uix-button-border-color` | `revert-layer` | Sets the button border color. This usually comes from a combination of the button `variant` and `appearance` but can be set directly with this CSS variable. |
 | `--uix-icon-button-background-color` | `currentColor` | Sets the icon-only button background color. If not set the default of `currentColor` will pick up `color` config if set, otherwise whatever the current `color` is where the icon-only button is placed. By default, this color only shows when hovered. |
-| `--uix-icon-button-background-opacity` | `0` | Sets the icon-only background opacity. Set to a value (0-1) to always show the background color at this value. By default the background color will only show when hovered, when opacity is set to `0.1`. Hovered opacity is always `calc(var(--uix-icon-button-background-opacity, 0) + 0.1)`. |
+| `--uix-icon-button-background-opacity` | `0` | Sets the icon-only background opacity. Set to a value (0-1) to always show the background color at this opacity value. |
+| `--uix-icon-button-background-color-hover` | `var(--uix-icon-button-background-color, currentColor)` | Set to override the icon-only background color when hovered. |
+| `--uix-icon-button-background-opacity-hover` | `calc(var(--uix-icon-button-background-opacity, 0) + 0.1)` | Set to override the icon-only opacity when hovered. |
 
 ## Examples
 

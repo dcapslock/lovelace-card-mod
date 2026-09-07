@@ -57,6 +57,16 @@ export class Uix extends LitElement {
   @property() _rendered_styles: string = "";
   _renderer: (_: string) => void;
 
+  private _uixUpdateListener = (ev: Event) => {
+    this.dynamicVariablesHaveChanged =
+      (ev as CustomEvent).detail?.variablesChanged || false;
+    if (!this.isConnected) {
+      this._processStylesOnConnect = true;
+      return;
+    }
+    this._process_styles(this.uix_input);
+  };
+
   _cancel_style_child = [];
 
   _observer: MutationObserver = new MutationObserver((mutations) => {
@@ -90,23 +100,9 @@ export class Uix extends LitElement {
     return apply_uix_compatible;
   }
 
-  constructor() {
-    super();
-
-    // uix-update is issued when themes are reloaded
-    document.addEventListener("uix-update", (ev: Event) => {
-      // Don't process disconnected elements
-      this.dynamicVariablesHaveChanged = (ev as CustomEvent).detail?.variablesChanged || false;
-      if (!this.isConnected) {
-        this._processStylesOnConnect = true;
-        return;
-      }
-      this._process_styles(this.uix_input);
-    });
-  }
-
   connectedCallback() {
     super.connectedCallback();
+    document.addEventListener("uix-update", this._uixUpdateListener);
     if (this._processStylesOnConnect) {
       this._processStylesOnConnect = false;
       this._debug("Processing styles on (Re)connect:", 
@@ -130,6 +126,15 @@ export class Uix extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._disconnect();
+
+    // DOM moves disconnect and reconnect custom elements synchronously. Delay
+    // unsubscription so those moves retain their listener; a node that remains
+    // detached becomes stale and will process current styles when reconnected.
+    Promise.resolve().then(() => {
+      if (this.isConnected) return;
+      document.removeEventListener("uix-update", this._uixUpdateListener);
+      this._processStylesOnConnect = true;
+    });
   }
 
   set styles(stl: UixStyle) {

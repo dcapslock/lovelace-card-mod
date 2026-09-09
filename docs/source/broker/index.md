@@ -4,9 +4,6 @@ description: Create declarative frontend event interactions for Home Assistant w
 ---
 # UIX Broker
 
-!!! note
-    UIX Broker is available in 8.2.0-beta.2
-
 UIX Broker turns browser events, keyboard shortcuts, and Home Assistant event-bus events into declarative interactions. An interaction selects a browser element, checks optional rules, then runs directives in their configured order.
 
 ```text

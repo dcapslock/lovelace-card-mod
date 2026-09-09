@@ -4,9 +4,6 @@ description: Select the element that UIX Broker rules and directives use by defa
 ---
 # Interaction Anchors
 
-!!! note
-    UIX Broker is available in 8.2.0-beta.2
-
 An interaction anchor selects the element that host-element rules inspect and directives use by default. Browser and shortcut interactions can select from the initiating event's composed path or use a UIX `select_tree` path. Server interactions use `select_tree` paths only.
 
 For terse YAML, `anchor` configuration is usually written in compact form. The table below summarises when event-path selection is used and when `select_tree` is used.

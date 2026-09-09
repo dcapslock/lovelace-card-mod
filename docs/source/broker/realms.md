@@ -4,9 +4,6 @@ description: Choose where a UIX Broker interaction listens for events.
 ---
 # Realms
 
-!!! note
-    UIX Broker is available in 8.2.0-beta.2
-
 The interaction `realm` determines where Broker listens and how its `listen` value is interpreted.
 
 | Realm | `listen` | Event source | Anchor support |

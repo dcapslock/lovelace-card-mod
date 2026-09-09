@@ -4,9 +4,6 @@ description: Learn how to enable the styling of custom panels loaded as iFrame w
 ---
 # Styling custom panels loaded as iframe
 
-!!! note
-    Styling custom panels loaded as iframe available in 8.2.0-beta.1
-
 By default, UIX does not style custom panels loaded as iframe. Use this experimental setting to enable styling of custom panels. See [Styling custom panels as iframe](../using/custom-panels.md) for more information and examples.
 
 ## Setting via the integration UI

@@ -4,9 +4,6 @@ description: Apply declarative UIX Broker operations to a selected element.
 ---
 # Directives
 
-!!! note
-    UIX Broker is available in 8.2.0-beta.2
-
 Directives run one at a time after every interaction rule matches. Each directive performs one configured operation, using the interaction anchor by default or an explicitly selected directive anchor where supported. Except for `block`, a directive may also have its own `rules`; the directive runs only when all of them match, otherwise Broker skips it and continues with the next directive.
 
 - [Block](#block) — prevent the initiating browser event's default action and propagation.

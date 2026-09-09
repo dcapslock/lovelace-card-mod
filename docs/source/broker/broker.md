@@ -4,9 +4,6 @@ description: Configure UIX Broker interactions and manage their configuration so
 ---
 # UIX Broker
 
-!!! note
-    UIX Broker is available in 8.2.0-beta.2
-
 An interaction has a `realm`, a `listen` value, an interaction `anchor`, optional `rules`, and an ordered list of `directives`.
 
 ```yaml

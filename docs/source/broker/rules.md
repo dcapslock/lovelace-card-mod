@@ -5,9 +5,6 @@ description: Match UIX Broker interactions against elements, captured data, and 
 
 # Rules
 
-!!! note
-    UIX Broker is available in 8.2.0-beta.2
-
 Every interaction rule must match before Broker runs its directives. Rules use the interaction anchor by default, but can also specify a relative or absolute override anchor.
 
 For non-`block` interactions, UIX Broker retries a missing rule override anchor every 50 ms for up to two seconds. This is useful for interfaces, such as dialogs, that mount after their initiating event fires.

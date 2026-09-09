@@ -3,9 +3,6 @@ description: Learn how to style custom panels
 ---
 # Styling custom panels
 
-!!! note
-    Styling custom panels loaded as iframe available in 8.2.0-beta.1
-
 UIX styles custom panels not loaded by iframe directly. UIX can also style custom panels loaded as iframe. Currently this is an experimental feature which you need to enable. See [Extras - Styling custom panels](../extras/style-custom-panels.md).
 
 !!! info "Custom panel loaded by iframe - How it works"
@@ -61,9 +58,6 @@ The result for both of the above is the same when the Browser Mod browser panel 
     Custom panels DOM structure may not use shadowRoots or Home Assistant elements so you will need to inspect the custom panel to understand what you can theme.
 
 ### Styling custom panels loaded by iframe
-
-!!! note
-    Styling custom panels loaded as iframe available in 8.2.0-beta.1
 
 Use the theme variable `uix-<name>(-yaml)` where `name` is the [custom panel](https://www.home-assistant.io/integrations/panel_custom/) name. If you are not sure of the custom panel name, use a desktop Browser's inspector tools to see what the first element is in the DOM of the iframe. The element's tag is the custom panel name.
 

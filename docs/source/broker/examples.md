@@ -4,9 +4,6 @@ description: UIX Broker examples
 ---
 # Examples
 
-!!! note
-    UIX Broker is available in 8.2.0-beta.2
-
 ## Make the card tab the default in the UI add-card dialog
 
 Outcome:

@@ -4,9 +4,6 @@ description: Learn how to enable the patching of ha-card at all times with this 
 ---
 # Always patch ha-card
 
-!!! note
-    Always patch ha-card available in 8.2.0-beta.1
-
 By default, UIX does not patch `ha-card` if it cannot find a card config in the first Frontend or custom element in its ancestor DOM tree. This experimental option allows for always patching ha-card element so theme variable `uix-card(-yaml)` can apply. `ha-card` without config may be used on config or custom panels.
 
 When `ha-card` is patched without config the class `type-generic-card` will be added to `ha-card`.

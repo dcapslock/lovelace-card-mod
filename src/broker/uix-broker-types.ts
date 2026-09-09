@@ -63,12 +63,41 @@ export type UixBrokerSearchRule = {
   value?: any;
 };
 
+type UixBrokerRequiredValueMatcher =
+  | {
+    /** Value matcher, with the same operators as captured-data rules. */
+    match: any;
+    /** Alias for match. */
+    value?: any;
+  }
+  | {
+    /** Alias for match. */
+    value: any;
+    match?: never;
+  };
+
+export type UixBrokerUserRule = {
+  /** Matches the current Home Assistant user's name or id. */
+  type: "user";
+} & UixBrokerRequiredValueMatcher;
+
+export type UixBrokerUserIsAdminRule = {
+  /** Matches whether the current Home Assistant user is an administrator. */
+  type: "user_is_admin";
+  /** Value matcher, with the same operators as captured-data rules. Defaults to true. */
+  match?: any;
+  /** Alias for match. */
+  value?: any;
+};
+
 export type UixBrokerRule =
   | string
   | UixBrokerHostElementRule
   | UixBrokerPanelRule
   | UixBrokerHashRule
   | UixBrokerSearchRule
+  | UixBrokerUserRule
+  | UixBrokerUserIsAdminRule
   | UixBrokerTypedRule;
 
 export type UixBrokerEventTarget = "anchor" | "window" | "document";

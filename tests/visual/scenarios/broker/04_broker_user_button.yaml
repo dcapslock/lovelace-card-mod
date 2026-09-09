@@ -1,0 +1,32 @@
+id: broker_user_button
+description: "UIX Broker interaction for user button"
+view_path: broker-user-button
+
+setup:
+  - type: add_broker_file
+    file_path: uix/test_broker_user_button.yaml
+
+card:
+  type: heading
+  heading: "Broker User Button Test"
+
+assertions:
+  - type: element_present
+    root: "ha-list-item-button#sidebar-panel-home"
+    selector: ha-button.uix-forge-spark-icon-button
+  - type: element_absent
+    root: "ha-list-item-button#sidebar-panel-map"
+    selector: ha-button.uix-forge-spark-icon-button
+  - type: element_present
+    root: "ha-list-item-button#sidebar-panel-energy"
+    selector: ha-button.uix-forge-spark-icon-button
+  - type: element_absent
+    root: "ha-list-item-button#sidebar-panel-logbook"
+    selector: ha-button.uix-forge-spark-icon-button
+  - type: snapshot
+    name: "60_broker_user_button"
+    threshold: 0.01
+
+teardown:
+  - type: remove_broker_file
+    file_path: uix/test_broker_user_button.yaml

@@ -1,0 +1,96 @@
+uix_broker:
+  - realm: browser
+    listen:
+      - uix-broker-ready
+      - uix-update-sidebar
+    anchor: "&home-assistant $ home-assistant-main $ ha-sidebar"
+    rules:
+      - type: user
+        match: Test Admin
+    directives:
+      - type: button
+        anchor: "$ div.panels-list div.wrapper ha-list-nav slot ha-list-item-button#sidebar-panel-home $ a#item div.content"
+        icon: mdi:hammer
+        color: purple
+        size: s
+        tap_action:
+          action: navigate
+          navigation_path: /config/tools
+        style:
+          "--ha-button-box-shadow": rgba(0, 0, 0, 0.1) 0px 4px 12px
+          "--ha-icon-button-size": "32px"
+          "--uix-icon-button-background-opacity": "0.08"
+          "--uix-button-border-color": "currentColor"
+          "--uix-button-margin": "6px"
+          z-index: 1
+  - realm: browser
+    listen:
+      - uix-broker-ready
+      - uix-update-sidebar
+    anchor: "&home-assistant $ home-assistant-main $ ha-sidebar"
+    rules:
+      - type: user
+        match: Not Matched
+    directives:
+      - type: button
+        anchor: "$ div.panels-list div.wrapper ha-list-nav slot ha-list-item-button#sidebar-panel-map $ a#item div.content"
+        icon: mdi:hammer
+        color: green
+        size: s
+        tap_action:
+          action: navigate
+          navigation_path: /config/tools
+        style:
+          "--ha-button-box-shadow": rgba(0, 0, 0, 0.1) 0px 4px 12px
+          "--ha-icon-button-size": "32px"
+          "--uix-icon-button-background-opacity": "0.08"
+          "--uix-button-border-color": "currentColor"
+          "--uix-button-margin": "6px"
+          z-index: 1
+  - realm: browser
+    listen:
+      - uix-broker-ready
+      - uix-update-sidebar
+    anchor: "&home-assistant $ home-assistant-main $ ha-sidebar"
+    rules:
+      - type: user_is_admin
+    directives:
+      - type: button
+        anchor: "$ div.panels-list div.wrapper ha-list-nav slot ha-list-item-button#sidebar-panel-energy $ a#item div.content"
+        icon: mdi:hammer
+        color: red
+        size: s
+        tap_action:
+          action: navigate
+          navigation_path: /config/tools
+        style:
+          "--ha-button-box-shadow": rgba(0, 0, 0, 0.1) 0px 4px 12px
+          "--ha-icon-button-size": "32px"
+          "--uix-icon-button-background-opacity": "0.08"
+          "--uix-button-border-color": "currentColor"
+          "--uix-button-margin": "6px"
+          z-index: 1
+  - realm: browser
+    listen:
+      - uix-broker-ready
+      - uix-update-sidebar
+    anchor: "&home-assistant $ home-assistant-main $ ha-sidebar"
+    rules:
+      - type: user_is_admin
+        match: false
+    directives:
+      - type: button
+        anchor: "$ div.panels-list div.wrapper ha-list-nav slot ha-list-item-button#sidebar-panel-logbook $ a#item div.content"
+        icon: mdi:hammer
+        color: yellow
+        size: s
+        tap_action:
+          action: navigate
+          navigation_path: /config/tools
+        style:
+          "--ha-button-box-shadow": rgba(0, 0, 0, 0.1) 0px 4px 12px
+          "--ha-icon-button-size": "32px"
+          "--uix-icon-button-background-opacity": "0.08"
+          "--uix-button-border-color": "currentColor"
+          "--uix-button-margin": "6px"
+          z-index: 1

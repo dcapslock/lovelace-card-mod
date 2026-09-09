@@ -58,7 +58,7 @@ rules:
 
 ## Typed rules
 
-Typed rules have a `type` key. The supported types are `browserid`, `hash`, `search`, `captured`, and `panel`.
+Typed rules have a `type` key. The supported types are `browserid`, `user`, `user_is_admin`, `hash`, `search`, `captured`, and `panel`.
 
 ### Browser identity
 
@@ -69,6 +69,55 @@ rules:
   - type: browserid
     id: kitchen-tablet
 ```
+
+### Home Assistant user
+
+Use `type: user` to match the signed-in Home Assistant user by either their
+display name (`hass.user.name`) or stable user id (`hass.user.id`). Home
+Assistant usernames are not available in the frontend user object and are not
+supported by this rule; use a display name or id. `match` and `value` use the
+same matching syntax and operators as [captured-data rules](#captured-data-rules),
+including wildcards, regular expressions, and boolean composition. Set either
+`match` or `value`.
+
+```yaml
+rules:
+  # Matches a user named Darryn or whose id is Darryn.
+  - type: user
+    match: Darryn
+
+  # Prefer the stable id when it is known.
+  - type: user
+    match: 9f1362c9e0a24d918c66d4fdcf12b001
+```
+
+For a positive matcher, either the name or id may match. A negated matcher,
+including `not` or `!=`, must exclude both fields. For example, this matches
+every user except the user named `wall-panel` (or with that id):
+
+```yaml
+rules:
+  - type: user
+    match:
+      not: wall-panel
+```
+
+Use `type: user_is_admin` to match the current user's administrator status.
+With no matcher it means “is an admin”; set `match` or `value` to `false` for
+non-admin users. It supports the same advanced matcher objects.
+
+Admin user:
+
+    rules:
+      - type: user_is_admin
+
+Non-admin user whose name or id starts with wall-:
+
+    rules:
+      - type: user
+        match: wall-*
+      - type: user_is_admin
+        match: false
 
 ### Browser URL fragment
 

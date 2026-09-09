@@ -1,3 +1,48 @@
+## [8.2.0](https://github.com/Lint-Free-Technology/uix/compare/v8.1.0...v8.2.0) (2026-09-09)
+
+### ⭐ New Features
+
+* Add experimental option to always patch ha-card even when there is no card config. Allows for ha-card used on settings and custom panels to be styled from theme. ([#541](https://github.com/Lint-Free-Technology/uix/issues/541)) ([3f3f74d](https://github.com/Lint-Free-Technology/uix/commit/3f3f74d2f160d7009ee61ce34e70e1f9b48119af))
+* Apply entity picture styling to entity badges. ([#548](https://github.com/Lint-Free-Technology/uix/issues/548)) ([42be874](https://github.com/Lint-Free-Technology/uix/commit/42be874ff89a6c01d512640bd70800915166c6c3)), references [#547](https://github.com/Lint-Free-Technology/uix/issues/547)
+* Apply UIX styling to custom panels loaded by iframe ([#549](https://github.com/Lint-Free-Technology/uix/issues/549)) ([45cc20c](https://github.com/Lint-Free-Technology/uix/commit/45cc20c7ec3f3a68a78d2cc0d6f3101dc87cd8fa))
+* **broker:** `event` directive now supports `captured_data: deep` to do a deep merge of interaction captured data and `event.data`. ([27c164a](https://github.com/Lint-Free-Technology/uix/commit/27c164acae2beef096b82778445bbb465e3112de))
+* **broker+action:** Add `event` UIX Action. Inject target of UIX Broker button action to UIX Action as `event` dispatch target. Allows UIX Broker buttons to fire a Browser event on its target. ([d5ef901](https://github.com/Lint-Free-Technology/uix/commit/d5ef90106067d9ebf548a806371300c94bfdddf6))
+* **broker+forge:** Add border color and icon background color/opacity to UIX Forge/Broker button. ([1bc51b6](https://github.com/Lint-Free-Technology/uix/commit/1bc51b645880a93f09520e2b3b6ddd48b02d4098))
+* **broker:** Add `template` and `javascript` directives that render a template or calls javascript and provides the result for further directives. ([#580](https://github.com/Lint-Free-Technology/uix/issues/580)) ([e4206c3](https://github.com/Lint-Free-Technology/uix/commit/e4206c37623aaa740c2ab80420c14223a3d2af7b))
+* **broker:** Add `uix-broker-ready` event which can be used as `listen` in browser realm. Update tools sidebar button example. ([3b5110f](https://github.com/Lint-Free-Technology/uix/commit/3b5110f22aaceb068f4218bc0f46d7b36b63f12a))
+* **broker:** Add button directive which allows to add a button in UI, similar to a forge button spark. ([21e3c01](https://github.com/Lint-Free-Technology/uix/commit/21e3c01346ae73e56567fb6d9323739276be975a))
+* **broker:** Add matching rules to directives so a specific directive can be excluded based on rules matching or not, except for `type: block` ([7c2ed9a](https://github.com/Lint-Free-Technology/uix/commit/7c2ed9a84e36ecbd4770ed7a883f605f38d8715f))
+* **broker:** Add standalone wait directive. ([a86e81f](https://github.com/Lint-Free-Technology/uix/commit/a86e81ff22b8cdaf06984544d6bb0bc20a167b96))
+* **broker:** Add typed rules `hash` and `search` to allow for rules based on Browser hash and search string. ([f75e153](https://github.com/Lint-Free-Technology/uix/commit/f75e153906b9db11432ed9fa55beea1761aecad6))
+* **broker:** Allow multiple `listen` events in Browser realm ([e90d033](https://github.com/Lint-Free-Technology/uix/commit/e90d03349925b1b3913ca68026605aa894df4727))
+* **broker:** New rule type `panel`. Allow `event` directive to fire on window or document with new `target` parameter (defaults to anchor). ([b1f3504](https://github.com/Lint-Free-Technology/uix/commit/b1f35043641d7a620453b42c774b0b2a8e70d11a))
+* **forge+broker:** Add `--uix-icon-button-background-color-hover` and `--uix-icon-button-background-opacity-hover` CSS styling variables. ([d41b62d](https://github.com/Lint-Free-Technology/uix/commit/d41b62d85fb2ca9cab79800fe22ceddd88443c81))
+* **forge:** Add `outlined` as an appearance option to button spark. Update docs and visual example. ([0254777](https://github.com/Lint-Free-Technology/uix/commit/02547770dd7b18f129238a78393f1218fe14a4bc))
+* UIX Broker. See documentation for further information. ([#556](https://github.com/Lint-Free-Technology/uix/issues/556)) ([4a6d2ff](https://github.com/Lint-Free-Technology/uix/commit/4a6d2ffecf8d55cecb6d2e80a966ef5d52916a70))
+
+### 🐞 Bug Fixes
+
+* **beta:** Regression with 8.2.0-beta.1 not loading UIX in regular dashboard hosted in an iFrame ([#562](https://github.com/Lint-Free-Technology/uix/issues/562)) ([6390f86](https://github.com/Lint-Free-Technology/uix/commit/6390f867dd478a2f300587e7ec30e53406595021)), references [#558](https://github.com/Lint-Free-Technology/uix/issues/558)
+* **broker:** Fix `@id` captured rule not accepting quoted bracketed keys ([67253e8](https://github.com/Lint-Free-Technology/uix/commit/67253e8e56e2d7e1bf42149f7b05c7a4163a0c7e))
+* **broker:** Remove reference to detached elements for anchor console helpers as well as button wrappers. Removes strong reference to detached DOM elements preventing them being garbage collected. ([2df5ebb](https://github.com/Lint-Free-Technology/uix/commit/2df5ebbdd4d7631ad46f607df3300848c5fb3c7d))
+* **broker:** Use correct Frontend action config for action directive ([ba6043a](https://github.com/Lint-Free-Technology/uix/commit/ba6043ac1b779111662c8f587a51af064e045202))
+* Entities card render crash for uninitialized forge molds when UIX coordinator is not ready ([#551](https://github.com/Lint-Free-Technology/uix/issues/551)) ([282a513](https://github.com/Lint-Free-Technology/uix/commit/282a51355ff5cdd53c5ba63b76163bd4d909e4a3)), references [#550](https://github.com/Lint-Free-Technology/uix/issues/550)
+* Remove event uix-update listener for detached uix-node preventing resource leak in edge case UIX Styling scenarios. ([f9db963](https://github.com/Lint-Free-Technology/uix/commit/f9db963e6e894510a31f29b691786222af11329b))
+* Set `drawer` and `state-history-charts` as theme types for console debug helpers so they give correct uix_path() results. ([7e24078](https://github.com/Lint-Free-Technology/uix/commit/7e240786e10ac4ef3388a41c5f4672e652942586))
+* UIX theme styling not always applied to config pages and custom panels when page/panel is initial page loaded. ([209e388](https://github.com/Lint-Free-Technology/uix/commit/209e388cb3c5594b5796b8045c7d0f2156708af0)), references [#573](https://github.com/Lint-Free-Technology/uix/issues/573)
+
+### 📔 Documentation
+
+* register German translation ([e079f50](https://github.com/Lint-Free-Technology/uix/commit/e079f50808e9488d5c5577d42f422d4627b5ca91))
+
+### 📦 Dependency Upgrades
+
+* bump js-yaml from 5.3.0 to 5.4.0 ([#560](https://github.com/Lint-Free-Technology/uix/issues/560)) ([e1b759f](https://github.com/Lint-Free-Technology/uix/commit/e1b759fd9fce92823106eeb53aa69cd63124be2f))
+
+### ⚙️ Miscellaneous
+
+* Migrate snake-case `uix_update` event to kebab-case `uix-update` ([23e1d0a](https://github.com/Lint-Free-Technology/uix/commit/23e1d0a8eb49d6d73e4f0f41fb38a2387272953c))
+
 ## [8.2.0-beta.18](https://github.com/Lint-Free-Technology/uix/compare/v8.2.0-beta.17...v8.2.0-beta.18) (2026-09-07)
 
 ### ⭐ New Features

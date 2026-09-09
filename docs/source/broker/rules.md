@@ -77,7 +77,8 @@ display name (`hass.user.name`) or stable user id (`hass.user.id`). Home
 Assistant usernames are not available in the frontend user object and are not
 supported by this rule; use a display name or id. `match` and `value` use the
 same matching syntax and operators as [captured-data rules](#captured-data-rules),
-including wildcards, regular expressions, and boolean composition.
+including wildcards, regular expressions, and boolean composition. Set either
+`match` or `value`.
 
 ```yaml
 rules:

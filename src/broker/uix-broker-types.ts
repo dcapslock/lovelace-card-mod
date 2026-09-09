@@ -63,14 +63,23 @@ export type UixBrokerSearchRule = {
   value?: any;
 };
 
+type UixBrokerRequiredValueMatcher =
+  | {
+    /** Value matcher, with the same operators as captured-data rules. */
+    match: any;
+    /** Alias for match. */
+    value?: any;
+  }
+  | {
+    /** Alias for match. */
+    value: any;
+    match?: never;
+  };
+
 export type UixBrokerUserRule = {
   /** Matches the current Home Assistant user's name or id. */
   type: "user";
-  /** Value matcher, with the same operators as captured-data rules. */
-  match?: any;
-  /** Alias for match. */
-  value?: any;
-};
+} & UixBrokerRequiredValueMatcher;
 
 export type UixBrokerUserIsAdminRule = {
   /** Matches whether the current Home Assistant user is an administrator. */

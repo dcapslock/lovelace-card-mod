@@ -10,7 +10,7 @@
 
 With an ever growing number of features that go beyond cards and dashboards, UI eXtension (UIX) was created to keep pushing the boundaries of custom CSS across your Home Assistant UI. UIX comes from the heritage of [card-mod](https://github.com/thomasloven/lovelace-card-mod) by [@thomasloven](https://github.com/thomasloven).
 
-UI eXtension consists of UIX Styling and UIX Forge. UIX Styling allows for applying CSS styles to (nearly) any Home Assistant Frontend element. UIX Forge provides a way to forge Home Assistant elements (cards, badges, rows, sections etc.) allowing for templates for all of the element's configuration, as well as additional advanced augmentation of the element through UIX Forge Sparks.
+UI eXtension consists of UIX Styling, UIX Forge and UIX Broker. UIX Styling allows for applying CSS styles to (nearly) any Home Assistant Frontend element. UIX Forge provides a way to forge Home Assistant elements (cards, badges, rows, sections etc.) allowing for templates for all of the element's configuration, as well as additional advanced augmentation of the element through UIX Forge Sparks. UIX Broker turns browser events, keyboard shortcuts, and Home Assistant event-bus events into declarative interactions. An interaction selects a browser element, checks optional rules, then runs directives in their configured order.
 
 ## 🚀 Quick Start
 

@@ -72,6 +72,9 @@ rules:
 
 ### Home Assistant user
 
+!!! info
+    Home Assistant user rules available in 8.3.0-beta.1
+
 Use `type: user` to match the signed-in Home Assistant user by either their
 display name (`hass.user.name`) or stable user id (`hass.user.id`). Home
 Assistant usernames are not available in the frontend user object and are not

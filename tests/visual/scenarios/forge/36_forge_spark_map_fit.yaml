@@ -19,12 +19,12 @@ card:
     element:
       type: map
       fit_zones: true
-      uix:
-        style: |
-          :host {
-            display: block;
-            height: 400px;
-          }
+  grid_options:
+    rows: 6
+
+interactions:
+  - type: wait
+    ms: 5000
 
 assertions:
   - type: snapshot

@@ -11,6 +11,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 FOUNDRY_FILE_TOP_LEVEL_KEY = "uix_foundries"
+BROKER_FILE_TOP_LEVEL_KEY = "uix_broker"
 
 def get_version(hass: HomeAssistant):
     with open(hass.config.path(f"custom_components/{DOMAIN}/manifest.json"), "r") as fp:
@@ -193,3 +194,109 @@ def get_all_foundries(
     file_foundries = load_foundries_from_files(hass, file_paths)
     merged = {**file_foundries, **foundries}
     return resolve_foundries(hass, merged)
+
+
+def resolve_broker_config(hass: HomeAssistant, interactions: list[dict]) -> list[dict]:
+    """Resolve YAML tags in UIX Broker interactions before sending them to clients."""
+    secrets = Secrets(Path(hass.config.config_dir))
+    base_path = hass.config.path("configuration.yaml")
+
+    def _resolve(value):
+        if isinstance(value, dict):
+            return {key: _resolve(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [_resolve(item) for item in value]
+        if isinstance(value, str) and value.startswith("!"):
+            sio = StringIO(value)
+            sio.name = base_path
+            try:
+                return parse_yaml(sio, secrets)
+            except Exception:
+                _LOGGER.error(
+                    "Failed to resolve %r in UIX Broker configuration — "
+                    "check that any !include paths exist and are readable, "
+                    "and that any !secret names are defined in secrets.yaml",
+                    value,
+                )
+        return value
+
+    return _resolve(interactions)
+
+
+def validate_broker_file(hass: HomeAssistant, file_path: str) -> str | None:
+    """Validate a YAML file containing a top-level ``uix_broker`` list."""
+    path = Path(file_path)
+    if not path.is_absolute():
+        path = Path(hass.config.config_dir) / path
+    if not path.exists():
+        return "broker_file_not_found"
+
+    try:
+        secrets = Secrets(Path(hass.config.config_dir))
+        with open(path, "r") as fp:
+            content = parse_yaml(fp, secrets)
+    except Exception:
+        _LOGGER.exception("Failed to parse UIX Broker file: %s", path)
+        return "broker_file_parse_error"
+
+    if not isinstance(content, dict):
+        return "broker_file_invalid_structure"
+    if BROKER_FILE_TOP_LEVEL_KEY not in content:
+        return "broker_file_missing_key"
+    if not isinstance(content[BROKER_FILE_TOP_LEVEL_KEY], list):
+        return "broker_file_invalid_config"
+    return None
+
+
+def load_broker_configs_from_files(
+    hass: HomeAssistant, file_paths: list[str]
+) -> list[dict]:
+    """Load Broker interactions in registration order from valid YAML files."""
+    secrets = Secrets(Path(hass.config.config_dir))
+    interactions: list[dict] = []
+    for file_path in file_paths:
+        path = Path(file_path)
+        if not path.is_absolute():
+            path = Path(hass.config.config_dir) / path
+        if not path.exists():
+            _LOGGER.error("UIX Broker file not found: %s", path)
+            continue
+        try:
+            with open(path, "r") as fp:
+                content = parse_yaml(fp, secrets)
+        except Exception:
+            _LOGGER.error("Failed to parse UIX Broker file: %s", path, exc_info=True)
+            continue
+        if not isinstance(content, dict) or not isinstance(content.get(BROKER_FILE_TOP_LEVEL_KEY), list):
+            _LOGGER.error(
+                "UIX Broker file %s must have a top-level '%s' list",
+                path,
+                BROKER_FILE_TOP_LEVEL_KEY,
+            )
+            continue
+        interactions.extend(content[BROKER_FILE_TOP_LEVEL_KEY])
+    return interactions
+
+
+def check_all_broker_files(
+    hass: HomeAssistant, file_paths: list[str]
+) -> dict:
+    """Validate all registered Broker files."""
+    errors = []
+    for file_path in file_paths:
+        error_key = validate_broker_file(hass, file_path)
+        if error_key is not None:
+            errors.append({"file_path": file_path, "error_key": error_key})
+    return {"errors": errors, "file_count": len(file_paths)}
+
+
+def get_all_broker_configs(
+    hass: HomeAssistant, interactions: list[dict], file_paths: list[str]
+) -> list[dict]:
+    """Return resolved Broker interactions from files followed by UI settings.
+
+    File interactions preserve their registration and YAML order. The UI-managed
+    interaction list is appended, so it is the final configuration source.
+    """
+    merged = [*load_broker_configs_from_files(hass, file_paths), *interactions]
+    return resolve_broker_config(hass, merged)

@@ -8,7 +8,7 @@
 # to verify that all doc images are either covered by a scenario or listed here.
 
 # FAQ - UI Minimalist custom_card option
-docs/source/assets/page-assets/faq/ui-minimalist-option.png
+docs/assets/page-assets/faq/ui-minimalist-option.png
 
 # Brand / logo assets
 docs/source/assets/images/mixed.png
@@ -21,3 +21,12 @@ docs/source/assets/page-assets/concepts/dom-1-dark.png
 
 docs/source/assets/page-assets/forge/sparks/attribute-replace-manually-generated.gif
 docs/source/assets/page-assets/forge/sparks/attribute-replace-template-manually-generated.gif
+
+# Using - custom panels. Panel examples are from integrations not loaded by test harness
+
+docs/source/assets/page-assets/using/custom-panel-browser-mod.png
+docs/source/assets/page-assets/using/custom-panel-hacs.png
+
+# Broker
+
+docs/source/assets/page-assets/broker/broker-button-directive.png

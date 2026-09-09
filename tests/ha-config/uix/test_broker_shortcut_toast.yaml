@@ -1,0 +1,14 @@
+uix_broker:
+  - realm: shortcut
+    listen: Z
+    anchor: '&home-assistant'
+    directives:
+      - type: action
+        action: fire-dom-event
+        uix:
+          action: toast
+          data:
+            id: toast-message-z
+            duration: 10000
+            bottomOffset: 500
+            message: Z Z Z Z Z Z Z Z Z Z Pressed

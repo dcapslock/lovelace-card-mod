@@ -49,7 +49,7 @@ export class UixForgeSparkTheme extends UixForgeSparkBase {
 
   private _notifyThemeUpdate() {
     document.dispatchEvent(
-      new CustomEvent("uix_update", {
+      new CustomEvent("uix-update", {
         detail: { variablesChanged: false },
       })
     );

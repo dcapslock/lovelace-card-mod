@@ -34,7 +34,7 @@ assertions:
     selector: ha-adaptive-dialog
   - type: element_present
     root: ha-more-info-dialog
-    selector: ha-related-items
+    selector: ha-more-info-related
   - type: snapshot
     name: 35_extra_more_info_action
     threshold: 0.02

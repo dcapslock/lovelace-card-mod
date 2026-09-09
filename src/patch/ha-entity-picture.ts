@@ -19,6 +19,7 @@ Supported elements:
 - ha-state-badge
 - ha-user-badge
 - ha-person-badge
+- hui-entity-badge
 */
 
 const getEntityId = (el: any): string | null => {
@@ -36,6 +37,8 @@ const getEntityId = (el: any): string | null => {
       return el._personEntityId || null;
     case "ha-person-badge":
       return el.person?.id ? `person.${el.person.id}` : null;
+    case "hui-entity-badge":
+      return (el.config ?? el._config)?.entity || null;
   }
 };
 
@@ -132,6 +135,17 @@ const applyImage = (el: any, imageUrl: string | null): void => {
           }
         }
       }
+      break;
+    case "hui-entity-badge":
+      if (!imageUrl && el._uix_replaced_image === undefined) return;
+      if (el._uix_replaced_image && imageUrl === el._uix_replaced_image) return;
+      const previousReplacedImage = el._uix_replaced_image;
+      if (imageUrl) {
+        el._uix_replaced_image = imageUrl;
+      } else if (el._uix_replaced_image !== undefined) {
+        el._uix_replaced_image = undefined;
+      }
+      el.requestUpdate("_uix_replaced_image", previousReplacedImage);
       break;
   }
 };
@@ -309,6 +323,27 @@ class HaPersonBadgePatch extends ModdedElement {
     this.uix_image_retries = 0;
     clearTimeout(this._bindUixDebounce);
     this._bindUixDebounce = setTimeout(() => bindUix(this), UIX_PATCH_DEBOUNCE_MS);
+  }
+}
+
+@patch_element("hui-entity-badge")
+class HuiEntityBadgePatch extends ModdedElement {
+  uix_image_retries = 0;
+  _bindUixDebounce: ReturnType<typeof setTimeout> | undefined = undefined;
+  _uix_replaced_image;
+  updated(_orig, ...args) {
+    _orig?.(...args);
+    if (args[0]?.has("_uix_replaced_image")) return;
+    if ((window as any).uixCoordinator?.disableEntityPictureImageOverride) return;
+    this.uix_image_retries = 0;
+    clearTimeout(this._bindUixDebounce);
+    this._bindUixDebounce = setTimeout(() => bindUix(this), UIX_PATCH_DEBOUNCE_MS);
+  }
+  _getImageUrl(_orig, ...args) {
+    if (this._uix_replaced_image) {
+      return this._uix_replaced_image;
+    }
+    return _orig?.(...args);
   }
 }
 

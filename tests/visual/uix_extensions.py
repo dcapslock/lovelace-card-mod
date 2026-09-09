@@ -2,7 +2,8 @@
 
 Importing this module registers the UIX interaction types
 (``add_foundry``, ``delete_foundry``, ``add_foundry_file``,
-``remove_foundry_file``, ``reload_foundry_files``, ``set_theme_file``) with
+``remove_foundry_file``, ``reload_foundry_files``, ``add_broker_file``,
+``remove_broker_file``, ``reload_broker_files``, ``set_theme_file``) with
 :mod:`scenario_runner` so they can be used in scenario YAML files.
 
 This module is imported by ``tests/conftest.py`` at session start, which
@@ -56,6 +57,30 @@ reload_foundry_files
     .. code-block:: yaml
 
         - type: reload_foundry_files
+
+add_broker_file
+    Register a YAML Broker file with UIX via ``uix/add_broker_file``.
+    The file must already exist in the HA config directory.
+
+    .. code-block:: yaml
+
+        - type: add_broker_file
+          file_path: uix_test_broker.yaml
+
+remove_broker_file
+    Deregister a Broker YAML file via ``uix/remove_broker_file``.
+
+    .. code-block:: yaml
+
+        - type: remove_broker_file
+          file_path: uix_test_broker.yaml
+
+reload_broker_files
+    Re-read all registered Broker files via ``uix/reload_broker_files``.
+
+    .. code-block:: yaml
+
+        - type: reload_broker_files
 
 set_theme_file
     Write Home Assistant ``themes.yaml`` for scenario setup/interactions.
@@ -191,6 +216,68 @@ def _reload_foundry_files(page: "Page | None", interaction: dict[str, Any], ha: 
     )
     if not result.get("success"):
         raise RuntimeError(f"uix/reload_foundry_files failed: {result}")
+
+
+def _add_broker_file(page: "Page | None", interaction: dict[str, Any], ha: Any = None) -> None:
+    """Register a Broker YAML file via ``uix/add_broker_file``.
+
+    The file must already exist in the HA config directory.
+    """
+    if ha is None:
+        raise ValueError(
+            "add_broker_file interaction requires the ha container — "
+            "pass ha= to run_interactions()"
+        )
+    file_path: str = interaction["file_path"]
+    result = ha._ws_call(
+        {
+            "id": 1,
+            "type": "uix/add_broker_file",
+            "file_path": file_path,
+        }
+    )
+    if not result.get("success"):
+        raise RuntimeError(f"uix/add_broker_file failed for {file_path!r}: {result}")
+
+
+def _remove_broker_file(page: "Page | None", interaction: dict[str, Any], ha: Any = None) -> None:
+    """Deregister a Broker YAML file via ``uix/remove_broker_file``.
+
+    The file itself is not deleted; only its path is removed from the UIX
+    config entry.
+    """
+    if ha is None:
+        raise ValueError(
+            "remove_broker_file interaction requires the ha container — "
+            "pass ha= to run_interactions()"
+        )
+    file_path: str = interaction["file_path"]
+    result = ha._ws_call(
+        {
+            "id": 1,
+            "type": "uix/remove_broker_file",
+            "file_path": file_path,
+        }
+    )
+    if not result.get("success"):
+        raise RuntimeError(f"uix/remove_broker_file failed for {file_path!r}: {result}")
+
+
+def _reload_broker_files(page: "Page | None", interaction: dict[str, Any], ha: Any = None) -> None:
+    """Trigger a re-read of all registered Broker files via ``uix/reload_broker_files``."""
+    if ha is None:
+        raise ValueError(
+            "reload_broker_files interaction requires the ha container — "
+            "pass ha= to run_interactions()"
+        )
+    result = ha._ws_call(
+        {
+            "id": 1,
+            "type": "uix/reload_broker_files",
+        }
+    )
+    if not result.get("success"):
+        raise RuntimeError(f"uix/reload_broker_files failed: {result}")
 
 
 def _set_theme_file(page: "Page | None", interaction: dict[str, Any], ha: Any = None) -> None:
@@ -413,6 +500,9 @@ register_interaction_type("delete_foundry", _delete_foundry)
 register_interaction_type("add_foundry_file", _add_foundry_file)
 register_interaction_type("remove_foundry_file", _remove_foundry_file)
 register_interaction_type("reload_foundry_files", _reload_foundry_files)
+register_interaction_type("add_broker_file", _add_broker_file)
+register_interaction_type("remove_broker_file", _remove_broker_file)
+register_interaction_type("reload_broker_files", _reload_broker_files)
 register_interaction_type("set_theme_file", _set_theme_file)
 register_interaction_type("mock_history", _mock_history)
 register_interaction_type("webhook", _webhook)

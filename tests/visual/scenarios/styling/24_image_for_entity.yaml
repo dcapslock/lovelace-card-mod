@@ -1,18 +1,90 @@
-id: image_for_entity
-description: "Image styling for an entity can be set via a theme variable and macro"
-view_path: image-for-entity
+id: image_for_entity_tile_badge
+description: "Image styling for an entity badge and tile card can be set via a theme variable and macro"
+view_path: image-for-entity-tile-badge
 
 theme: uix-image-for-entity-theme
 
-card:
-  type: tile
-  entity: person.james_bond_007
+setup:
+  - type: ha_service
+    domain: input_boolean
+    service: turn_on
+    data:
+      entity_id: input_boolean.test_boolean
+
+dashboard:
+  views:
+    - type: sections
+      title: Image styling for an entity badge and tile card.
+      badges:
+        - type: entity
+          entity: person.james_bond_007
+          show_entity_picture: true
+        - type: entity
+          entity: person.test_admin
+          show_entity_picture: true
+          uix:
+            style: |
+              :host {
+                --uix-image: 
+                {{ '/local/media/daniel_craig_cropped.jpg' if is_state('input_boolean.test_boolean', 'on') else '' }};
+              }
+        - type: entity
+          entity: input_boolean.test_boolean
+          show_entity_picture: true
+          uix:
+            style: |
+              :host {
+                --uix-image: /local/media/daniel_craig_cropped.jpg;
+              }
+      sections:
+        - type: grid
+          cards:
+            - type: tile
+              entity: person.james_bond_007
 
 interactions:
+  - type: wait
+    ms: 250
+  - type: ha_service
+    domain: input_boolean
+    service: turn_off
+    data:
+      entity_id: input_boolean.test_boolean
+  - type: wait
+    ms: 250
+  - type: ha_service
+    domain: input_boolean
+    service: turn_on
+    data:
+      entity_id: input_boolean.test_boolean
   - type: wait
     ms: 1000
 
 assertions:
+  - type: element_present
+    root: hui-badge:nth-of-type(1) hui-entity-badge
+    selector: img
+  - type: object_property_text_ends_with
+    root: hui-badge:nth-of-type(1) hui-entity-badge
+    selector: img
+    property: src
+    expected: "question_mark_cropped.jpg"
+  - type: element_present
+    root: hui-badge:nth-of-type(2) hui-entity-badge
+    selector: img
+  - type: object_property_text_ends_with
+    root: hui-badge:nth-of-type(2) hui-entity-badge
+    selector: img
+    property: src
+    expected: "daniel_craig_cropped.jpg"
+  - type: element_present
+    root: hui-badge:nth-of-type(3) hui-entity-badge
+    selector: img
+  - type: object_property_text_ends_with
+    root: hui-badge:nth-of-type(3) hui-entity-badge
+    selector: img
+    property: src
+    expected: "daniel_craig_cropped.jpg"
   - type: object_property_text_ends_with
     root: hui-tile-card
     selector: ha-tile-icon

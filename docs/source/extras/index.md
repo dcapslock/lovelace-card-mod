@@ -11,3 +11,5 @@ UI eXtension provides for additional settings to control the integration or Home
 - [Disable hash template variable and updates](./hash-template-variable-updates.md)
 - [Disable icon styling patching](./disable-icon-styling.md)
 - [Disable entity picture image overrides](./disable-entity-picture-image-override.md)
+- [Always patch ha-card (experimental)](always-patch-ha-card.md)
+- [Style custom panels (experimental)](style-custom-panels.md)

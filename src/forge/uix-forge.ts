@@ -500,6 +500,7 @@ export class UixForge extends LitElement {
   }
 
   get hidden() {
+    if (!this._mold) return true;
     if (this._mold.isPreview()) return false;
     if (!this.templatesReady) return true;
     if (this.forgedElement?.hidden) return true;
@@ -514,7 +515,7 @@ export class UixForge extends LitElement {
   }
 
   public getGridOptions() {
-    return this._mold.getGridOptions();
+    return this._mold ? this._mold.getGridOptions() : {};
   }
 
   public async computeCardSize() {
@@ -531,7 +532,7 @@ export class UixForge extends LitElement {
 
     if (!this._uixUpdateListener) {
       this._uixUpdateListener = (ev: Event) => this._onUixUpdate(ev);
-      document.addEventListener("uix_update", this._uixUpdateListener);
+      document.addEventListener("uix-update", this._uixUpdateListener);
     }
 
     // Listen for foundry updates from the coordinator
@@ -597,7 +598,7 @@ export class UixForge extends LitElement {
     this._sparkController.disconnectedCallback();
 
     if (this._uixUpdateListener) {
-      document.removeEventListener("uix_update", this._uixUpdateListener);
+      document.removeEventListener("uix-update", this._uixUpdateListener);
       this._uixUpdateListener = undefined;
     }
 
@@ -1011,17 +1012,17 @@ export class UixForge extends LitElement {
     }
     if (_changedProperties.has("preview")) {
       this.forgedElement && (this.forgedElement.preview = this.preview);
-      if (!this.preview || this._mold.isPictureElement()) {
+      if (!this.preview || this._mold?.isPictureElement()) {
         this.refreshForge(["hidden"]);
       }
-      if (this.preview && this._mold.isFooter()) {
+      if (this.preview && this._mold?.isFooter()) {
         this.refreshForge(["hidden"]);
       }
-      if (this.preview && this._mold.isSection()) {
+      if (this.preview && this._mold?.isSection()) {
         this.refreshForge(["hidden"]);
       }
     }
-    if (_changedProperties.has("lovelace") && this._mold.isSection()) {
+    if (_changedProperties.has("lovelace") && this._mold?.isSection()) {
       if (this.forgedElement) {
         // Force lovelace of forged section to be in non-editable mode
         // A section in non-editable mode does not need anything else in lovelace
@@ -1040,13 +1041,13 @@ export class UixForge extends LitElement {
         });
       }
     }
-    if(_changedProperties.has("layout")) {
+    if (_changedProperties.has("layout")) {
       this.forgedElement && (this.forgedElement.layout = this.layout);
     }
     if (_changedProperties.has("templatesReady")) {
       this.refreshForgedElement([]);
     }
-    if (this._mold.isCardFeature()) {
+    if (this._mold?.isCardFeature()) {
       if (
         _changedProperties.has("context") ||
         _changedProperties.has("color") ||
@@ -1054,7 +1055,7 @@ export class UixForge extends LitElement {
       ) {
         this.refreshForgeTemplates();
       }
-      if (this._mold.isPreview()) {
+      if (this._mold?.isPreview()) {
         this.refreshForgedElement(["hidden"]);
       }
     }

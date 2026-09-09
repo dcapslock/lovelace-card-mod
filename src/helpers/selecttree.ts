@@ -33,6 +33,8 @@ const INTEGER_RE = /^\d+$/;
  * chaining; plain integers in the path are treated as array indices.
  * The resolved value is coerced to a string for comparisons.
  *   {.prop}             — property exists (not null/undefined)
+ *   {!.prop}            — property path does not exist
+ *   {.prop=undefined}   — property exists and is strictly undefined
  *   {.prop=val}         — property (as string) equals val
  *   {.prop^=val}        — starts-with
  *   {.prop$=val}        — ends-with
@@ -44,7 +46,7 @@ const INTEGER_RE = /^\d+$/;
  *   &{.notification.notification_id='1234567'}
  *   &{.items.0.name='foo'}
  */
-function pseudoMatches(element: Element, selector: string): boolean {
+export function matchesHostElementPath(element: Element, selector: string): boolean {
   let s = selector.trim();
   if (s.startsWith("(") && s.endsWith(")")) {
     s = s.slice(1, -1).trim();
@@ -108,28 +110,46 @@ function pseudoMatches(element: Element, selector: string): boolean {
   while ((pm = propRe.exec(s)) !== null) {
     const inner = pm[1];
     const propOpMatch = inner.match(
-      // Groups: 1=dotted-path, 2=op, 3=double-quoted val, 4=single-quoted val, 5=bare val
+      // Groups: 1=negated, 2=dotted-path, 3=op, 4=double-quoted val,
+      // 5=single-quoted val, 6=bare val
       // Each path segment is either a plain integer (array index) or a JS identifier.
-      /^((?:\.(?:[0-9]+|[a-zA-Z_$][a-zA-Z0-9_$]*))+)\s*(?:([~|^$*]?=)\s*(?:"([^"]*)"|'([^']*)'|([^\s}]*)))?$/
+      /^(!)?((?:\.(?:[0-9]+|[a-zA-Z_$][a-zA-Z0-9_$]*))+)\s*(?:([~|^$*]?=)\s*(?:"([^"]*)"|'([^']*)'|([^\s}]*)))?$/
     );
     if (propOpMatch) {
-      const [, path, op, dqVal, sqVal, rawVal] = propOpMatch;
+      const [, negated, path, op, dqVal, sqVal, rawVal] = propOpMatch;
       // Navigate the dot-separated property path with optional chaining.
       // Pure-integer segments are used as array indices.
       const keys = path.slice(1).split(".");
       let propVal: unknown = element;
+      let propExists = true;
       for (const key of keys) {
         if (propVal == null || typeof propVal !== "object") {
           propVal = undefined;
+          propExists = false;
           break;
         }
         const idx = INTEGER_RE.test(key) ? parseInt(key, 10) : key;
+        if (!(idx in propVal)) {
+          propVal = undefined;
+          propExists = false;
+          break;
+        }
         propVal = Array.isArray(propVal) && typeof idx === "number"
           ? (propVal as unknown[])[idx]
           : (propVal as Record<string | number, unknown>)[idx];
       }
+      if (negated) {
+        if (op || propExists) return false;
+        continue;
+      }
       if (op) {
         const expected = dqVal ?? sqVal ?? rawVal ?? "";
+        // Bare `undefined` is a strict JavaScript-value check. Quoted
+        // "undefined" remains a normal string comparison.
+        if (op === "=" && rawVal === "undefined") {
+          if (!propExists || propVal !== undefined) return false;
+          continue;
+        }
         const actual = String(propVal ?? "");
         if (op === "=" && actual !== expected) return false;
         if (op === "~=" && !actual.split(/\s+/).filter(Boolean).includes(expected)) return false;
@@ -306,7 +326,7 @@ async function _selectTree(root, path, all = false) {
       if (!e) return false;
       const target =
         e instanceof ShadowRoot ? e.host : e;
-      return target instanceof Element ? pseudoMatches(target, selector) : false;
+      return target instanceof Element ? matchesHostElementPath(target, selector) : false;
     });
     while (path.length > 0 && !path[0].trim().length) path.shift();
   }

@@ -74,7 +74,7 @@ class HaDrawerPatch extends ModdedElement {
     //   - Initial style render on load.
     //   - Template re-renders driven by HA state changes (e.g. is_state(...)).
     //   - Template re-renders on navigation (panel variable changes).
-    //   - Re-renders after a theme reload (uix_update always re-renders styles).
+    //   - Re-renders after a theme reload (uix-update always re-renders styles).
     //
     // `uix-styles-update` fires synchronously when `_rendered_styles` is set
     // (before Lit has re-rendered the <style> element), so we wait for

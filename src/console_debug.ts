@@ -16,6 +16,13 @@
  *   uix_forge_path($0)  – Forge helper: reports the path from the closest uix-forge parent's
  *                         forged element to the selected element, for use as the `for`,
  *                         `before`, or `after` value in a forge spark config.
+ *
+ *   uix_broker_path($0) – Broker helper: reports the select_tree path from the closest recent
+ *                         resolved Broker interaction anchor to the selected element, for use
+ *                         as a property or event directive `anchor`.
+ *
+ *   uix_broker_absolute_path($0) – Broker helper: reports a compact select_tree path from the
+ *                         document root to the selected element, ready for an interaction `anchor`.
  */
 
 interface UixParentInfo {
@@ -169,6 +176,7 @@ const THEME_UIX_TYPES = new Set([
   "dialog", "root", "view", "more-info", "sidebar",
   "config", "panel-custom", "top-app-bar-fixed",
   "calendar", "history", "profile", "todo", "persistent-notification",
+  "drawer", "state-history-charts"
 ]);
 
 // ---------------------------------------------------------------------------
@@ -493,6 +501,83 @@ function buildForgeSelectorPath(rootEl: Element, targetEl: Element): string | nu
   return parts.join(" ").trim() || null;
 }
 
+// ---------------------------------------------------------------------------
+// Build a complete select_tree path from an interaction anchor to a target.
+// Unlike the concise forge helper, this keeps light-DOM ancestor selectors so
+// the resulting directive anchor remains precise when similar elements exist.
+// ---------------------------------------------------------------------------
+
+function buildBrokerSelectorPath(rootEl: Element, targetEl: Element): string | null {
+  if (targetEl === rootEl) return "";
+
+  type Segment = { kind: "element"; sel: string } | { kind: "shadow" };
+  const segments: Segment[] = [];
+  let current: Node = targetEl;
+
+  while (current && current !== rootEl) {
+    if (current instanceof ShadowRoot) {
+      segments.unshift({ kind: "shadow" });
+      current = current.host;
+    } else if (current instanceof Element) {
+      if (current.localName !== "uix-node") {
+        segments.unshift({ kind: "element", sel: buildSelector(current) });
+      }
+      current = current.parentNode ?? null;
+    } else {
+      current = (current as any).parentNode ?? null;
+    }
+  }
+
+  if (current !== rootEl) return null;
+  return segments.map((segment) => segment.kind === "shadow" ? "$" : segment.sel).join(" ");
+}
+
+function buildAbsoluteBrokerSelectorPath(targetEl: Element): string | null {
+  type Segment = { kind: "element"; sel: string } | { kind: "shadow" };
+  const segments: Segment[] = [];
+  let current: Node = targetEl;
+
+  while (current && current !== document) {
+    if (current instanceof ShadowRoot) {
+      segments.unshift({ kind: "shadow" });
+      current = current.host;
+    } else if (current instanceof Element) {
+      if (current.localName !== "uix-node") {
+        segments.unshift({ kind: "element", sel: buildSelector(current) });
+      }
+      current = current.parentNode ?? null;
+    } else {
+      current = (current as any).parentNode ?? null;
+    }
+  }
+
+  if (current !== document) return null;
+
+  const parts: string[] = [];
+  const lastShadowIndex = segments.map((segment) => segment.kind).lastIndexOf("shadow");
+  for (let i = 0; i < segments.length - 1; i++) {
+    const segment = segments[i];
+    if (segment.kind === "shadow") {
+      parts.push("$");
+    } else if (segments[i + 1].kind === "shadow") {
+      parts.push(segment.sel);
+    } else if (i > lastShadowIndex) {
+      parts.push(segment.sel);
+    }
+  }
+  parts.push(buildSelector(targetEl));
+  return parts.join(" ").trim() || null;
+}
+
+function distanceToAncestor(target: Element, ancestor: Element): number | null {
+  let distance = 0;
+  for (const node of domAncestorsAndSelf(target)) {
+    if (node === ancestor) return distance;
+    distance++;
+  }
+  return null;
+}
+
 
 
 (window as any).uix_tree = async function uix_tree(element: Element) {
@@ -761,4 +846,101 @@ function buildForgeSelectorPath(rootEl: Element, targetEl: Element): string | nu
   console.log(yaml);
 
   console.groupEnd();
+};
+
+// ---------------------------------------------------------------------------
+// uix_broker_path($0[, interactionAnchor]) – Broker directive-anchor helper
+// ---------------------------------------------------------------------------
+
+(window as any).uix_broker_path = function uix_broker_path(
+  element: Element,
+  interactionAnchor?: Element,
+) {
+  if (!element || !(element instanceof Element)) {
+    console.error(
+      "UIX Broker: provide a DOM element – e.g. uix_broker_path($0) where $0 is selected in the Elements panel."
+    );
+    return null;
+  }
+
+  const broker = (window as any).uixBroker;
+  const entries = Array.isArray(broker?.recentAnchors) ? broker.recentAnchors : [];
+  const candidates = interactionAnchor instanceof Element
+    ? [{ anchor: interactionAnchor, distance: distanceToAncestor(element, interactionAnchor), resolvedAt: Date.now() }]
+    : entries
+      .filter((entry: any) => entry?.anchor instanceof Element && entry.anchor.isConnected)
+      .map((entry: any) => ({
+        ...entry,
+        distance: distanceToAncestor(element, entry.anchor),
+      }))
+      .filter((entry: any) => entry.distance !== null)
+      .sort((a: any, b: any) => a.distance - b.distance || b.resolvedAt - a.resolvedAt);
+
+  const candidate = candidates[0];
+  const TITLE_STYLE = "color: white; background-color: #CE3226; padding: 2px 5px; font-weight: bold; border-radius: 5px;";
+  const SECTION_STYLE = "color:#888;font-weight:bold;";
+  console.group("%c💡 UIX Broker Path 💡", TITLE_STYLE);
+  console.log("Target element:", element);
+
+  if (!candidate || candidate.distance === null) {
+    console.warn(
+      "No recent Broker interaction anchor contains this element. Trigger the interaction first, or pass an explicit anchor: uix_broker_path($0, $1)."
+    );
+    if (entries.length) console.log("Recent Broker anchors:", entries);
+    console.groupEnd();
+    return null;
+  }
+
+  const path = buildBrokerSelectorPath(candidate.anchor, element);
+  if (path === null) {
+    console.warn("Could not build a relative Broker path for this target.");
+    console.groupEnd();
+    return null;
+  }
+
+  console.log("%c📦 Interaction Anchor", SECTION_STYLE);
+  console.log("  Element:", candidate.anchor);
+  console.log("%c📍 Directive Anchor Path", SECTION_STYLE);
+  if (!path) {
+    console.log("  Target is the interaction anchor; omit the directive anchor.");
+  } else {
+    console.log("  Path:", `\"${path}\"`);
+    console.log("%c📝 Directive YAML", SECTION_STYLE);
+    console.log(`anchor: \"${path}\"`);
+  }
+  console.groupEnd();
+  return path || null;
+};
+
+// ---------------------------------------------------------------------------
+// uix_broker_absolute_path($0) – Broker interaction-anchor helper
+// ---------------------------------------------------------------------------
+
+(window as any).uix_broker_absolute_path = function uix_broker_absolute_path(element: Element) {
+  if (!element || !(element instanceof Element)) {
+    console.error(
+      "UIX Broker: provide a DOM element – e.g. uix_broker_absolute_path($0) where $0 is selected in the Elements panel."
+    );
+    return null;
+  }
+
+  const path = buildAbsoluteBrokerSelectorPath(element);
+  const TITLE_STYLE = "color: white; background-color: #CE3226; padding: 2px 5px; font-weight: bold; border-radius: 5px;";
+  const SECTION_STYLE = "color:#888;font-weight:bold;";
+  console.group("%c💡 UIX Broker Absolute Path 💡", TITLE_STYLE);
+  console.log("Target element:", element);
+
+  if (!path) {
+    console.warn("Could not build a document-root Broker path for this target.");
+    console.groupEnd();
+    return null;
+  }
+
+  const anchor = `&${path}`;
+  console.log("%c📍 Interaction Anchor Path", SECTION_STYLE);
+  console.log("  Path:", `\"${anchor}\"`);
+  console.log("%c📝 Interaction YAML", SECTION_STYLE);
+  console.log(`anchor: \"${anchor}\"`);
+  console.groupEnd();
+  return anchor;
 };

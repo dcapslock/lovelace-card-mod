@@ -1,3 +1,4 @@
+import { isEmbeddedPanel, getCustomPanelName } from "./hass";
 import { selectTree } from "./selecttree";
 
 var PanelState: Promise<any> | null = null;
@@ -31,6 +32,14 @@ async function _getPanel(document) {
     }
     if (!panel) {
       panel = await selectTree(document, "hc-main $ hc-lovelace");
+    }
+    if (!panel && isEmbeddedPanel()) {
+      const customPanelName = getCustomPanelName();
+      if (customPanelName) {
+        panel = await selectTree(document, getCustomPanelName());
+      } else {
+        panel = undefined;
+      }
     }
     return panel;
   }
@@ -101,6 +110,11 @@ async function _current_panel_state() {
   const coordinator = (window as any).uixCoordinator;
   const includeHash = !coordinator?.disableHashTemplateVariable;
   const panel = await _getPanel(document);
+  if (!panel) {
+    return {
+      panel: {}
+    };
+  }
   const panelAttributes = _panelAttributes(panel);
   const viewAttributes = await _viewAttributes(panel);
   const fullTitle = [];
@@ -134,6 +148,9 @@ async function _current_panel_state() {
 function _panel_state_update() {
   const update = async () => {
     var panelState = await _current_panel_state();
+    if (!panelState.panel.fullUrlPath) {
+      return panelState;
+    }
     var browserPath = window.location.pathname.slice(1).toLowerCase();
     var panelPath = panelState.panel.fullUrlPath.toLowerCase();
     let retry = 0;
@@ -165,7 +182,7 @@ function _refresh_panel_state(dispatchOnChange = true) {
     if (dispatchOnChange && changed) {
       LastDispatchedPanelState = panelStateKey;
       document.dispatchEvent(
-        new CustomEvent("uix_update", { detail: { variablesChanged: true } })
+        new CustomEvent("uix-update", { detail: { variablesChanged: true } })
       );
     } else if (LastDispatchedPanelState === null) {
       LastDispatchedPanelState = panelStateKey;

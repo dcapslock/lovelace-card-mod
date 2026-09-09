@@ -17,10 +17,14 @@ from .checks import (
     check_card_mod_frontend_script_resource
 )
 from .const import (
+    CONF_ALWAYS_PATCH_HA_CARD,
+    CONF_STYLE_CUSTOM_PANELS,
     DOMAIN, 
     NAME, 
     CARD_MOD_FRONTEND_SCRIPT_URL,
     CONF_FOUNDRIES,
+    CONF_UIX_BROKER,
+    CONF_UIX_BROKER_FILES,
     CONF_FOUNDRY_FILES,
     CONF_HASS_THROTTLE_ENABLE,
     CONF_HASS_THROTTLE_MS,
@@ -31,7 +35,7 @@ from .const import (
     CONF_DISABLE_ENTITY_PICTURE_IMAGE_OVERRIDE,
     EVENT_FOUNDRIES_UPDATED,
 )
-from .helpers import validate_foundry_file
+from .helpers import validate_broker_file, validate_foundry_file
 
 class UixConfigFlow(ConfigFlow, domain=DOMAIN):
 
@@ -84,6 +88,9 @@ class UixOptionsFlow(OptionsFlow):
         self._foundry_files: list[str] = list(
             config_entry.options.get(CONF_FOUNDRY_FILES, [])
         )
+        self._broker_files: list[str] = list(
+            config_entry.options.get(CONF_UIX_BROKER_FILES, [])
+        )
         self._foundry_name: str | None = None
 
     async def async_step_init(
@@ -95,7 +102,10 @@ class UixOptionsFlow(OptionsFlow):
             menu_options=[
                 "foundry_menu",
                 "foundry_file_menu",
+                "broker_settings",
+                "broker_file_menu",
                 "performance_settings",
+                "experimental_settings",
             ],
             description_placeholders={
                 "foundries_docs_link": "[Foundries documentation](https://uix.lf.technology/forge/foundries)",
@@ -199,6 +209,143 @@ class UixOptionsFlow(OptionsFlow):
                 }
             ),
         )
+
+    async def async_step_broker_file_menu(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show the Broker-file sub-menu with registered file paths."""
+        broker_files_list = "\n".join(f"- {path}" for path in self._broker_files) or "_None_"
+        return self.async_show_menu(
+            step_id="broker_file_menu",
+            menu_options=[
+                "register_broker_file",
+                "deregister_broker_file",
+                "reload_broker_files",
+            ],
+            description_placeholders={"broker_files_list": broker_files_list},
+        )
+
+    async def async_step_broker_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure the global UIX Broker interaction list."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            config = user_input[CONF_UIX_BROKER]
+            if not isinstance(config, dict) or not isinstance(config.get(CONF_UIX_BROKER), list):
+                errors[CONF_UIX_BROKER] = "invalid_broker_config"
+            else:
+                return self.async_create_entry(
+                    title="",
+                    data={
+                        **self._config_entry.options,
+                        CONF_UIX_BROKER: config[CONF_UIX_BROKER],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="broker_settings",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_UIX_BROKER,
+                        default={CONF_UIX_BROKER: self._config_entry.options.get(CONF_UIX_BROKER, [])},
+                    ): ObjectSelector(),
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_experimental_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure experimental settings."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="",
+                data={
+                    **self._config_entry.options,
+                    CONF_ALWAYS_PATCH_HA_CARD: user_input[CONF_ALWAYS_PATCH_HA_CARD],
+                    CONF_STYLE_CUSTOM_PANELS: user_input[CONF_STYLE_CUSTOM_PANELS],
+                },
+            )
+
+        return self.async_show_form(
+            step_id="experimental_settings",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_ALWAYS_PATCH_HA_CARD,
+                        default=self._config_entry.options.get(CONF_ALWAYS_PATCH_HA_CARD, False),
+                    ): BooleanSelector(),
+                    vol.Optional(
+                        CONF_STYLE_CUSTOM_PANELS,
+                        default=self._config_entry.options.get(CONF_STYLE_CUSTOM_PANELS, False),
+                    ): BooleanSelector(),
+                }
+            ),
+        )
+
+    async def async_step_register_broker_file(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Register a YAML file containing Broker interactions."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            file_path: str = user_input["file_path"].strip()
+            if file_path in self._broker_files:
+                errors["file_path"] = "broker_file_already_added"
+            else:
+                error_key = await self.hass.async_add_executor_job(
+                    validate_broker_file, self.hass, file_path
+                )
+                if error_key is not None:
+                    errors["file_path"] = error_key
+                else:
+                    self._broker_files.append(file_path)
+                    return self.async_create_entry(
+                        title="",
+                        data={
+                            **self._config_entry.options,
+                            CONF_UIX_BROKER_FILES: self._broker_files,
+                        },
+                    )
+
+        return self.async_show_form(
+            step_id="register_broker_file",
+            data_schema=vol.Schema({vol.Required("file_path"): cv.string}),
+            errors=errors,
+        )
+
+    async def async_step_deregister_broker_file(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Deregister a Broker file without deleting it."""
+        if not self._broker_files:
+            return self.async_abort(reason="no_broker_files")
+        if user_input is not None:
+            file_path = user_input["file_path"]
+            if file_path in self._broker_files:
+                self._broker_files.remove(file_path)
+            return self.async_create_entry(
+                title="",
+                data={
+                    **self._config_entry.options,
+                    CONF_UIX_BROKER_FILES: self._broker_files,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="deregister_broker_file",
+            data_schema=vol.Schema({vol.Required("file_path"): vol.In(self._broker_files)}),
+        )
+
+    async def async_step_reload_broker_files(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Re-read registered Broker files and push the merged configuration."""
+        self.hass.bus.async_fire(EVENT_FOUNDRIES_UPDATED, {})
+        return self.async_create_entry(title="", data=self._config_entry.options)
 
     async def async_step_add_foundry(
         self, user_input: dict[str, Any] | None = None

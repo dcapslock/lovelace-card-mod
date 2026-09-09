@@ -19,7 +19,10 @@
                 "menu_options": {
                     "foundry_menu": "Manage UI foundries",
                     "foundry_file_menu": "Manage foundry files",
-                    "performance_settings": "Performance settings"
+                    "broker_settings": "Configure Broker",
+                    "broker_file_menu": "Manage Broker files",
+                    "performance_settings": "Performance settings",
+                    "experimental_settings": "Experimental settings"
                 }
             },
             "foundry_menu": {
@@ -58,6 +61,48 @@
                     "disable_hash_template_variable": "When enabled, hash (the part after # in the URL) template variable is not available and hash changes do not trigger UIX template rebinds or UIX Forge updates.",
                     "disable_icon_styling": "When enabled, disables patching of icon elements (ha-icon, ha-state-icon, ha-svg-icon) for custom styling. This can reduce CPU overhead on slower devices.",
                     "disable_entity_picture_image_override": "When enabled, disables patching of badge and marker elements (ha-entity-marker, ha-tile-icon, state-badge, ha-user-badge, ha-person-badge) for custom entity picture image styling. This can reduce CPU overhead on slower devices."
+                }
+            },
+            "experimental_settings": {
+                "title": "Experimental Settings",
+                "description": "Configure experimental features for UIX.",
+                "data": {
+                    "always_patch_ha_card": "Always patch ha-card",
+                    "style_custom_panels": "Style custom panels loaded as iframe"
+                },
+                "data_description": {
+                    "always_patch_ha_card": "When enabled, always patch ha-card, even when there is no card config. This allows patching when ha-card is used in settings dashboards or custom panels.",
+                    "style_custom_panels": "When enabled, apply UIX theme styling to custom panels loaded as iframe."
+                }
+            },
+            "broker_settings": {
+                "title": "UIX Broker",
+                "description": "Enter the canonical UIX Broker object, with its interactions under the `uix_broker` key.",
+                "data": {
+                    "uix_broker": "Broker configuration"
+                }
+            },
+            "broker_file_menu": {
+                "title": "Broker Files",
+                "description": "**Registered Broker files:**\n{broker_files_list}",
+                "menu_options": {
+                    "register_broker_file": "Register a Broker file",
+                    "deregister_broker_file": "Deregister a Broker file",
+                    "reload_broker_files": "Reload Broker files"
+                }
+            },
+            "register_broker_file": {
+                "title": "Register a Broker file",
+                "description": "Enter the path to a YAML file containing Broker interactions under a top-level 'uix_broker' key. The path may be absolute or relative to the Home Assistant config directory.",
+                "data": {
+                    "file_path": "File path"
+                }
+            },
+            "deregister_broker_file": {
+                "title": "Deregister a Broker file",
+                "description": "Select the Broker file to deregister. The file itself is not deleted — only its registration with UIX is removed.",
+                "data": {
+                    "file_path": "File to deregister"
                 }
             },
             "add_foundry": {
@@ -105,16 +150,24 @@
         },
         "abort": {
             "no_foundries": "No UI foundries are configured yet. Add one first.",
-            "no_foundry_files": "No foundry files are registered yet. Register one first."
+            "no_foundry_files": "No foundry files are registered yet. Register one first.",
+            "no_broker_files": "No Broker files are registered yet. Register one first."
         },
         "error": {
             "invalid_config": "The configuration must be a YAML mapping.",
+            "invalid_broker_config": "The configuration must be an object containing a 'uix_broker' list.",
             "file_already_added": "This file path is already registered.",
             "file_not_found": "The file was not found. Check the path and try again.",
             "file_parse_error": "The file could not be parsed as YAML. Check the file for syntax errors.",
             "file_invalid_structure": "The file must be a YAML mapping.",
             "file_missing_key": "The file must have a top-level 'uix_foundries' key.",
-            "file_invalid_foundries": "The 'uix_foundries' key must be a YAML mapping of foundry names to configurations."
+            "file_invalid_foundries": "The 'uix_foundries' key must be a YAML mapping of foundry names to configurations.",
+            "broker_file_already_added": "This Broker file path is already registered.",
+            "broker_file_not_found": "The Broker file was not found. Check the path and try again.",
+            "broker_file_parse_error": "The Broker file could not be parsed as YAML. Check the file for syntax errors.",
+            "broker_file_invalid_structure": "The Broker file must be a YAML mapping.",
+            "broker_file_missing_key": "The Broker file must have a top-level 'uix_broker' key.",
+            "broker_file_invalid_config": "The 'uix_broker' key must be a YAML list of Broker interactions."
         }
     }
 }

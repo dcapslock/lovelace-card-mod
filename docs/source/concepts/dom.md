@@ -185,7 +185,9 @@ Matching is done by directly inspecting the parent/host properties — not via C
 | `[attr~=val]` | whitespace-separated word match |
 | `[attr\|=val]` | value equals or is a `-`-prefixed sub-tag |
 | `{.prop}` | `element.prop` is not `null`/`undefined` |
+| `{!.prop}` | property path does not exist |
 | `{.prop=val}` | `String(element.prop) === val` |
+| `{.prop=undefined}` | `element.prop` exists and is strictly `undefined` |
 | `{.prop^=val}` | stringified value starts with `val` |
 | `{.prop$=val}` | stringified value ends with `val` |
 | `{.prop*=val}` | stringified value contains `val` |
@@ -195,6 +197,10 @@ Matching is done by directly inspecting the parent/host properties — not via C
 Tokens may be combined — e.g. `&ha-dialog.my-class[data-type="video"]` — and all must match. Spaces **outside** attribute-selector brackets and property-selector braces split the path and are therefore **not** supported in a `&` selector. Spaces and `$` inside `[…]` and `{…}` (including inside quoted values) are treated as literals, so operators such as `$=` (ends-with) and values containing dots or spaces work correctly.
 
 Property selectors navigate actual JS element properties via a dot-separated path using optional chaining (e.g. `{.notification.notification_id='1234567'}` resolves `element.notification?.notification_id`). Plain integer path segments are treated as array indices when the current value is an `Array` (e.g. `{.items.0.name}` accesses `element.items[0].name`). Named keys on arrays also work, since arrays are objects in JavaScript. Values may be double-quoted, single-quoted, or bare.
+The bare value `undefined` is reserved for an explicit undefined-value check;
+quote it (`'undefined'` or `"undefined"`) to match that literal string.
+Use the bare negated form `{!.prop}` to match a missing property path; it does
+not match a property that exists with an `undefined` or `null` value.
 
 Class-based selectors may optionally be wrapped in parentheses for readability: `&(.my-class)` is equivalent to `&.my-class`.
 
@@ -284,7 +290,7 @@ Class-based selectors may optionally be wrapped in parentheses for readability: 
 
 ## DOM inspection helpers
 
-UIX ships three browser console helpers that make it easier to discover valid style paths, forge spark paths, and understand the UIX element hierarchy at runtime. Open your browser's DevTools console, select an element in the **Elements** panel (it becomes `$0`), then call one of the functions below.
+UIX ships browser console helpers that make it easier to discover valid style paths, forge spark paths, Broker directive anchors, and understand the UIX element hierarchy at runtime. Open your browser's DevTools console, select an element in the **Elements** panel (it becomes `$0`), then call one of the functions below.
 
 ### `uix_tree($0)` — general helper
 
@@ -410,3 +416,36 @@ uix_forge_path($0)
         #   before: "hui-tile-card $ ha-card ha-tile-container ha-tile-icon"
         #   icon: mdi:home
     ```
+
+### `uix_broker_path($0)` — Broker directive-anchor helper
+
+After triggering a Broker interaction, select an element inside its resolved
+interaction anchor and run:
+
+```js
+uix_broker_path($0)
+```
+
+The helper finds the most specific recent interaction anchor containing `$0` and
+prints a complete UIX tree path relative to it. Use that result as `anchor` on a
+`property` or `event` directive. When several active interactions overlap, pass
+the intended interaction anchor explicitly as the second argument:
+
+```js
+uix_broker_path($0, $1)
+```
+
+### `uix_broker_absolute_path($0)` — Broker interaction-anchor helper
+
+Select an element in the **Elements** panel and run:
+
+```js
+uix_broker_absolute_path($0)
+```
+
+It prints and returns a document-root UIX tree path with the `&` prefix, ready
+to use as an interaction `anchor`:
+
+```yaml
+anchor: "&home-assistant $ hui-dialog-create-card"
+```

@@ -1,6 +1,6 @@
 ---
 title: UIX actions
-description: Learn how UIX actions can assist in clearing cache, showing more-info with specific view or showing toast message.
+description: Learn how UIX actions can clear cache, show more-info or toast messages, run JavaScript, and dispatch browser events.
 ---
 # UIX actions
 
@@ -42,6 +42,33 @@ tap_action:
   action: fire-dom-event
   uix:
     action: clear-cache
+```
+
+## `event` - dispatch a browser event
+
+Dispatches a [`CustomEvent`](https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent) on `window`. This is useful for connecting a button action to a UIX Broker interaction in the `browser` realm without adding a `fire-dom-event` listener that unwraps another event.
+
+| config | setting | default | description |
+| --- | --- | --- | --- |
+| `action: event` | - | - | Dispatches a browser `CustomEvent` on `window`. |
+| `name` | **REQUIRED** | - | Event name. |
+| `data` | - | `{}` | Event `detail`. |
+
+For a normal dashboard action, the event is dispatched on `window`. For a UIX Broker `button` directive, UIX automatically dispatches from the button's placement reference — its `after` target, `before` target, or directive anchor — with `bubbles: true` and `composed: true`. The receiving Broker interaction can therefore use an event-path anchor such as `target`, `<`, or `<$`; it does not need to re-search from an absolute `select_tree` path.
+
+For example, this Broker button dispatches `toggle-yaml-mode` from its placement reference:
+
+```yaml
+- type: button
+  before: $ ha-automation-sidebar $$ ha-automation-sidebar-card $ ha-dialog-header slot:nth-of-type(3) ha-dropdown
+  icon: mdi:code-braces
+  tap_action:
+    action: fire-dom-event
+    uix:
+      action: event
+      name: toggle-yaml-mode
+      data:
+        source: sidebar-button
 ```
 
 ## `more-info` - show Home Assistant more-info for an entity with starting view

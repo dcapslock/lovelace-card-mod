@@ -1,0 +1,24 @@
+uix_broker:
+  - realm: server
+    listen: state_changed
+    anchor: "&home-assistant"
+    rules:
+      - type: captured
+        path: data.entity_id
+        match: light.bed_light
+      - type: captured
+        path: data.old_state.state
+        match: "off"
+      - type: captured
+        path: data.new_state.state
+        match: "on"
+    directives:
+      - type: action
+        action: fire-dom-event
+        uix:
+          action: toast
+          data:
+            id: toast-message-bed-light
+            duration: 10000
+            bottomOffset: 500
+            message: Bed Light Turned On

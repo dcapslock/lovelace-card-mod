@@ -57,6 +57,28 @@ cards:
           sparks:
             - type: button
               after: hui-markdown-card $ ha-markdown
+              label: Outlined
+              appearance: outlined
+        element:
+          type: markdown
+          content: " "
+          uix:
+            style: |
+              ha-card {
+                padding-bottom: 16px;
+                padding-top: 16px;
+                display: flex;
+                justify-content: space-around;
+              }
+              ha-markdown {
+                display: none;
+              }
+      - type: custom:uix-forge
+        forge:
+          mold: card
+          sparks:
+            - type: button
+              after: hui-markdown-card $ ha-markdown
               label: Plain
               appearance: plain
         element:
@@ -74,7 +96,7 @@ cards:
                 display: none;
               }
     title: Brand
-    columns: 3
+    columns: 4
     uix:
       style: |
         :host {
@@ -117,6 +139,29 @@ cards:
               variant: neutral
               label: Filled
               appearance: filled
+        element:
+          type: markdown
+          content: " "
+          uix:
+            style: |
+              ha-card {
+                padding-bottom: 16px;
+                padding-top: 16px;
+                display: flex;
+                justify-content: space-around;
+              }
+              ha-markdown {
+                display: none;
+              }
+      - type: custom:uix-forge
+        forge:
+          mold: card
+          sparks:
+            - type: button
+              after: hui-markdown-card $ ha-markdown
+              variant: neutral
+              label: Outlined
+              appearance: outlined
         element:
           type: markdown
           content: " "
@@ -155,7 +200,7 @@ cards:
                 display: none;
               }
     title: Neutral
-    columns: 3
+    columns: 4
     uix:
       style: |
         :host {
@@ -198,6 +243,29 @@ cards:
               variant: danger
               label: Filled
               appearance: filled
+        element:
+          type: markdown
+          content: " "
+          uix:
+            style: |
+              ha-card {
+                padding-bottom: 16px;
+                padding-top: 16px;
+                display: flex;
+                justify-content: space-around;
+              }
+              ha-markdown {
+                display: none;
+              }
+      - type: custom:uix-forge
+        forge:
+          mold: card
+          sparks:
+            - type: button
+              after: hui-markdown-card $ ha-markdown
+              variant: danger
+              label: Outlined
+              appearance: outlined
         element:
           type: markdown
           content: " "
@@ -236,7 +304,7 @@ cards:
                 display: none;
               }
     title: Danger
-    columns: 3
+    columns: 4
     uix:
       style: |
         :host {
@@ -279,6 +347,29 @@ cards:
               variant: warning
               label: Filled
               appearance: filled
+        element:
+          type: markdown
+          content: " "
+          uix:
+            style: |
+              ha-card {
+                padding-bottom: 16px;
+                padding-top: 16px;
+                display: flex;
+                justify-content: space-around;
+              }
+              ha-markdown {
+                display: none;
+              }
+      - type: custom:uix-forge
+        forge:
+          mold: card
+          sparks:
+            - type: button
+              after: hui-markdown-card $ ha-markdown
+              variant: warning
+              label: Outlined
+              appearance: outlined
         element:
           type: markdown
           content: " "
@@ -317,7 +408,7 @@ cards:
                 display: none;
               }
     title: Warning
-    columns: 3
+    columns: 4
     uix:
       style: |
         :host {
@@ -381,6 +472,29 @@ cards:
             - type: button
               after: hui-markdown-card $ ha-markdown
               variant: success
+              label: Outlined
+              appearance: outlined
+        element:
+          type: markdown
+          content: " "
+          uix:
+            style: |
+              ha-card {
+                padding-bottom: 16px;
+                padding-top: 16px;
+                display: flex;
+                justify-content: space-around;
+              }
+              ha-markdown {
+                display: none;
+              }
+      - type: custom:uix-forge
+        forge:
+          mold: card
+          sparks:
+            - type: button
+              after: hui-markdown-card $ ha-markdown
+              variant: success
               label: Plain
               appearance: plain
         element:
@@ -398,7 +512,7 @@ cards:
                 display: none;
               }
     title: Success
-    columns: 3
+    columns: 4
     uix:
       style: |
         :host {
@@ -443,6 +557,14 @@ doc_animation:
     - interactions:
         - type: hover
           root: 
+            - div.card:nth-of-type(1) hui-grid-card
+            - hui-card:nth-of-type(4) uix-forge
+          selector: hui-card
+          settle_ms: 0
+      frames: 14   # ~1s
+    - interactions:
+        - type: hover
+          root: 
             - div.card:nth-of-type(2) hui-grid-card
             - hui-card:nth-of-type(1) uix-forge
           selector: hui-card
@@ -461,6 +583,14 @@ doc_animation:
           root: 
             - div.card:nth-of-type(2) hui-grid-card
             - hui-card:nth-of-type(3) uix-forge
+          selector: hui-card
+          settle_ms: 0
+      frames: 14   # ~1s
+    - interactions:
+        - type: hover
+          root: 
+            - div.card:nth-of-type(2) hui-grid-card
+            - hui-card:nth-of-type(4) uix-forge
           selector: hui-card
           settle_ms: 0
       frames: 14   # ~1s
@@ -491,6 +621,14 @@ doc_animation:
     - interactions:
         - type: hover
           root: 
+            - div.card:nth-of-type(3) hui-grid-card
+            - hui-card:nth-of-type(4) uix-forge
+          selector: hui-card
+          settle_ms: 0
+      frames: 14   # ~1s
+    - interactions:
+        - type: hover
+          root: 
             - div.card:nth-of-type(4) hui-grid-card
             - hui-card:nth-of-type(1) uix-forge
           selector: hui-card
@@ -515,6 +653,14 @@ doc_animation:
     - interactions:
         - type: hover
           root: 
+            - div.card:nth-of-type(4) hui-grid-card
+            - hui-card:nth-of-type(4) uix-forge
+          selector: hui-card
+          settle_ms: 0
+      frames: 14   # ~1s
+    - interactions:
+        - type: hover
+          root: 
             - div.card:nth-of-type(5) hui-grid-card
             - hui-card:nth-of-type(1) uix-forge
           selector: hui-card
@@ -533,6 +679,14 @@ doc_animation:
           root: 
             - div.card:nth-of-type(5) hui-grid-card
             - hui-card:nth-of-type(3) uix-forge
+          selector: hui-card
+          settle_ms: 0
+      frames: 14   # ~1s
+    - interactions:
+        - type: hover
+          root: 
+            - div.card:nth-of-type(5) hui-grid-card
+            - hui-card:nth-of-type(4) uix-forge
           selector: hui-card
           settle_ms: 0
       frames: 14   # ~1s

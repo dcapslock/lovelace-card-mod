@@ -61,7 +61,7 @@ element:
 | `start_icon` | `string` | | — | MDI icon string (e.g. `mdi:play`) displayed **before** the label. |
 | `end_icon` | `string` | | — | MDI icon string (e.g. `mdi:chevron-right`) displayed **after** the label. |
 | `variant` | `string` | | — | Button color variant. One of `brand`, `neutral`, `danger`, `warning`, `success`. When omitted, the default Home Assistant button variant `brand` is used, except when `icon` is set in which case `neutral` is default. |
-| `appearance` | `string` | | — | Button appearance. One of `accent`, `filled`, `plain`. When omitted, the default Home Assistant button appearance `accent` is used, except when `icon` is set in which case `plain` is default. |
+| `appearance` | `string` | | — | Button appearance. One of `accent`, `filled`, `outlined`, `plain`. When omitted, the default Home Assistant button appearance `accent` is used, except when `icon` is set in which case `plain` is default. |
 | `size` | `string` | | — | Button size which can be `s` (small) or `m` (medium). |
 | `tap_action` | action | | — | Action to perform on tap. |
 | `hold_action` | action | | — | Action to perform on hold. |
@@ -72,7 +72,7 @@ element:
     - The spark targets the **first** element matched by `after`/`before`.
     - The inserted `ha-button` is placed in a containing `<div>` inside the same parent as the target element — it is a sibling, not a child.
     - `icon` and `label` are mutually exclusive. When `icon` is set, `label` is ignored.
-    - Margin styling of `-6px` is applied which allows the button to align nicely in various places in Home Assistant. This margin can be controlled by the CSS variable `--uix-button-margin`.
+    - Margin styling of `-6px` is applied to labelled buttons, while icon-only buttons default to `0px`. This margin can be controlled by the CSS variable `--uix-button-margin`.
     - When only `icon` is set (no `label`), the button automatically receives styling to match Home Assistant's icon button.
 
 ## Actions
@@ -106,7 +106,13 @@ element:
 
 | Variable | Default | Description |
 | --- | --- | --- |
+| `--uix-button-margin` | `-6px` or `0px` for icon-only button | Sets the margin for the button. Default for a labelled button suits Home Assistant Frontend styling defaults. |
 | `--uix-button-label-text-wrap` | `wrap` | Sets the button label text wrap. Default for `ha-button` is `wrap`. Set to `nowrap` if you wish for your labels to not wrap. This may or may not be needed based on the element in which the button is placed. You will need to set on a tile card like shown in the examples below. |
+| `--uix-button-border-color` | `revert-layer` | Sets the button border color. This usually comes from a combination of the button `variant` and `appearance` but can be set directly with this CSS variable. |
+| `--uix-icon-button-background-color` | `currentColor` | Sets the icon-only button background color. If not set the default of `currentColor` will pick up `color` config if set, otherwise whatever the current `color` is where the icon-only button is placed. By default, this color only shows when hovered. |
+| `--uix-icon-button-background-opacity` | `0` | Sets the icon-only background opacity. Set to a value (0-1) to always show the background color at this opacity value. |
+| `--uix-icon-button-background-color-hover` | `var(--uix-icon-button-background-color, currentColor)` | Set to override the icon-only background color when hovered. |
+| `--uix-icon-button-background-opacity-hover` | `calc(var(--uix-icon-button-background-opacity, 0) + 0.1)` | Set to override the icon-only opacity when hovered. |
 
 ## Examples
 

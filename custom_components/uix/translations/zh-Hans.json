@@ -19,7 +19,10 @@
                 "menu_options": {
                     "foundry_menu": "管理 UI Foundry",
                     "foundry_file_menu": "管理 Foundry 文件",
-                    "performance_settings": "性能设置"
+                    "broker_settings": "配置 Broker",
+                    "broker_file_menu": "管理 Broker 文件",
+                    "performance_settings": "性能设置",
+                    "experimental_settings": "实验性设置"
                 }
             },
             "foundry_menu": {
@@ -58,6 +61,48 @@
                     "disable_hash_template_variable": "启用后，Hash（URL 中 # 之后的部分）模板变量将不可用，且 Hash 的更改不会触发 UIX 模板重绑定或 UIX Forge 更新。",
                     "disable_icon_styling": "启用后，禁用对图标元素（ha-icon、ha-state-icon、ha-svg-icon）的修补，不再执行自定义样式或重写。这可以减少慢速设备上的 CPU 开销。",
                     "disable_entity_picture_image_override": "启用后，禁用对徽章和标记元素（ha-entity-marker、ha-tile-icon、state-badge、ha-user-badge、ha-person-badge）的修补，不再执行自定义实体头像图片重载。这可以减少慢速设备上的 CPU 开销。"
+                }
+            },
+            "experimental_settings": {
+                "title": "实验性设置",
+                "description": "配置 UIX 的实验性功能。",
+                "data": {
+                    "always_patch_ha_card": "始终修补 ha-card",
+                    "style_custom_panels": "为作为 iframe 加载的自定义面板应用 UIX 主题样式"
+                },
+                "data_description": {
+                    "always_patch_ha_card": "启用后，即使没有卡片配置，也始终修补 ha-card。这允许在设置仪表盘或自定义面板中使用 ha-card 时进行修补。",
+                    "style_custom_panels": "启用后，将对作为 iframe 加载的自定义面板应用 UIX 主题样式。"
+                }
+            },
+            "broker_settings": {
+                "title": "UIX Broker",
+                "description": "输入规范的 UIX Broker 对象，其交互项位于 `uix_broker` 键下。",
+                "data": {
+                    "uix_broker": "Broker 配置"
+                }
+            },
+            "broker_file_menu": {
+                "title": "Broker 文件",
+                "description": "**已注册的 Broker 文件：**\n{broker_files_list}",
+                "menu_options": {
+                    "register_broker_file": "注册 Broker 文件",
+                    "deregister_broker_file": "注销 Broker 文件",
+                    "reload_broker_files": "重新加载 Broker 文件"
+                }
+            },
+            "register_broker_file": {
+                "title": "注册 Broker 文件",
+                "description": "输入包含顶级键 'uix_broker' 的 Broker 交互 YAML 文件路径。路径可以是绝对路径，也可以相对于 Home Assistant 配置目录。",
+                "data": {
+                    "file_path": "文件路径"
+                }
+            },
+            "deregister_broker_file": {
+                "title": "注销 Broker 文件",
+                "description": "选择要注销的 Broker 文件。文件本身不会被删除 —— 仅移除其在 UIX 中的注册状态。",
+                "data": {
+                    "file_path": "要注销的文件"
                 }
             },
             "add_foundry": {
@@ -105,7 +150,8 @@
         },
         "abort": {
             "no_foundries": "尚未配置任何 UI Foundry。请先添加一个。",
-            "no_foundry_files": "尚未注册任何 Foundry 文件。请先注册一个。"
+            "no_foundry_files": "尚未注册任何 Foundry 文件。请先注册一个。",
+            "no_broker_files": "尚未注册任何 Broker 文件。请先注册一个。"
         },
         "error": {
             "invalid_config": "配置必须是一个 YAML 映射（Mapping）。",
@@ -114,7 +160,14 @@
             "file_parse_error": "无法将文件解析为 YAML。请检查文件的语法错误。",
             "file_invalid_structure": "文件必须是一个 YAML 映射（Mapping）。",
             "file_missing_key": "文件必须包含顶级键 'uix_foundries'。",
-            "file_invalid_foundries": "'uix_foundries' 键的内容必须是 Foundry 名称到配置的 YAML 映射。"
+            "file_invalid_foundries": "'uix_foundries' 键的内容必须是 Foundry 名称到配置的 YAML 映射。",
+            "invalid_broker_config": "配置必须是包含 'uix_broker' 列表的对象。",
+            "broker_file_already_added": "该 Broker 文件路径已注册。",
+            "broker_file_not_found": "找不到 Broker 文件。请检查路径并重试。",
+            "broker_file_parse_error": "无法将 Broker 文件解析为 YAML。请检查文件的语法错误。",
+            "broker_file_invalid_structure": "Broker 文件必须是一个 YAML 映射（Mapping）。",
+            "broker_file_missing_key": "Broker 文件必须包含顶级键 'uix_broker'。",
+            "broker_file_invalid_config": "'uix_broker' 键的内容必须是 Broker 交互的 YAML 列表。"
         }
     }
 }

@@ -11,25 +11,49 @@ const tsPluginOptions = {
   exclude: ["**/*.d.ts"],
 };
 
-export default {
-  input: "src/main.ts",
-  output: {
-    file: "custom_components/uix/uix.js",
-    format: "es",
+export default [
+  {
+    input: "src/main.ts",
+    output: {
+      file: "custom_components/uix/uix.js",
+      format: "es",
+    },
+    plugins: [
+      nodeResolve(),
+      commonjs(),
+      json(),
+      esbuild({ // 2. Replace typescript() with esbuild()
+        minify: !dev,
+        target: 'es2017',
+        tsconfig: './tsconfig.json'
+      }),
+      babel({ 
+        presets: [["@babel/preset-env", { modules: false }, "@babel/preset-typescript"]], 
+        babelHelpers: "bundled",
+        extensions: [".js", ".jsx", ".ts", ".tsx"] // Ensure it targets TS files
+      }),
+    ],
   },
-  plugins: [
-    nodeResolve(),
-    commonjs(),
-    json(),
-    esbuild({ // 2. Replace typescript() with esbuild()
-      minify: !dev,
-      target: 'es2017',
-      tsconfig: './tsconfig.json'
-    }),
-    babel({ 
-      presets: [["@babel/preset-env", { modules: false }, "@babel/preset-typescript"]], 
-      babelHelpers: "bundled",
-      extensions: [".js", ".jsx", ".ts", ".tsx"] // Ensure it targets TS files
-    }),
-  ],
-};
+  {
+    input: "src/custom-panel/main-custom-panel.ts",
+    output: {
+      file: "custom_components/uix/uixCustomPanel.js",
+      format: "es",
+    },
+    plugins: [
+      nodeResolve(),
+      commonjs(),
+      json(),
+      esbuild({ // 2. Replace typescript() with esbuild()
+        minify: !dev,
+        target: 'es2017',
+        tsconfig: './tsconfig.json'
+      }),
+      babel({ 
+        presets: [["@babel/preset-env", { modules: false }, "@babel/preset-typescript"]], 
+        babelHelpers: "bundled",
+        extensions: [".js", ".jsx", ".ts", ".tsx"] // Ensure it targets TS files
+      }),
+    ],
+  },
+];

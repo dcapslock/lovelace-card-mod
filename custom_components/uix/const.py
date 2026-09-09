@@ -3,6 +3,7 @@ NAME = "UI eXtension for Home Assistant"
 
 CARD_MOD_FRONTEND_SCRIPT_URL = "card-mod.js"
 FRONTEND_SCRIPT_URL = "uix.js"
+FRONTEND_SCRIPT_CUSTOM_PANEL = "uixCustomPanel.js"
 
 DATA_EXTRA_MODULE_URL = "frontend_extra_module_url"
 
@@ -10,6 +11,8 @@ WS_CONNECT = f"{DOMAIN}/connect"
 WS_LOG = f"{DOMAIN}/log"
 
 CONF_FOUNDRIES = "foundries"
+CONF_UIX_BROKER = "uix_broker"
+CONF_UIX_BROKER_FILES = "uix_broker_files"
 CONF_FOUNDRY_FILES = "foundry_files"
 
 CONF_HASS_THROTTLE_ENABLE = "hass_throttle_enable"
@@ -21,6 +24,9 @@ CONF_DISABLE_HASH_TEMPLATE_VARIABLE = "disable_hash_template_variable"
 CONF_DISABLE_ICON_STYLING = "disable_icon_styling"
 CONF_DISABLE_ENTITY_PICTURE_IMAGE_OVERRIDE = "disable_entity_picture_image_override"
 
+CONF_ALWAYS_PATCH_HA_CARD = "always_patch_ha_card"
+CONF_STYLE_CUSTOM_PANELS = "style_custom_panels"
+
 WS_GET_FOUNDRIES = f"{DOMAIN}/get_foundries"
 WS_SET_FOUNDRY = f"{DOMAIN}/set_foundry"
 WS_DELETE_FOUNDRY = f"{DOMAIN}/delete_foundry"
@@ -28,5 +34,9 @@ WS_ADD_FOUNDRY_FILE = f"{DOMAIN}/add_foundry_file"
 WS_REMOVE_FOUNDRY_FILE = f"{DOMAIN}/remove_foundry_file"
 WS_RELOAD_FOUNDRY_FILES = f"{DOMAIN}/reload_foundry_files"
 WS_CHECK_FOUNDRY_FILES = f"{DOMAIN}/check_foundry_files"
+WS_ADD_BROKER_FILE = f"{DOMAIN}/add_broker_file"
+WS_REMOVE_BROKER_FILE = f"{DOMAIN}/remove_broker_file"
+WS_RELOAD_BROKER_FILES = f"{DOMAIN}/reload_broker_files"
+WS_CHECK_BROKER_FILES = f"{DOMAIN}/check_broker_files"
 
 EVENT_FOUNDRIES_UPDATED = f"{DOMAIN}_foundries_updated"

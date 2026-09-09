@@ -16,7 +16,7 @@ window.addEventListener("uix-bootstrap", async (ev: Event) => {
     if (actionName && typeof actionName === "string" && typeof actionList[actionName] === "function") {
       try {
         const data = (uix as any).data ?? {};
-        const result = (actionList as any)[actionName](data);
+        const result = (actionList as any)[actionName](data, uix);
         if (result && typeof (result as Promise<unknown>).catch === "function") {
           (result as Promise<unknown>).catch((error: unknown) => {
             console.error(`UIX: Error while executing action "${actionName}":`, error);
@@ -30,6 +30,18 @@ window.addEventListener("uix-bootstrap", async (ev: Event) => {
 });
 
 export class Actions {
+  static event(name: unknown, data: unknown = {}, anchor?: unknown) {
+    if (typeof name !== "string" || !name.trim()) {
+      console.error("UIX: event action requires a non-empty name:", name);
+      return;
+    }
+    const target = anchor instanceof EventTarget ? anchor : window;
+    target.dispatchEvent(new CustomEvent(name, {
+      bubbles: true,
+      composed: true,
+      detail: data,
+    }));
+  }
   static async clear_cache() {
     if (window.caches) {
       try {
@@ -145,6 +157,7 @@ export class Actions {
 }
 
 const actionList: Record<string, Function> = {
+  event: (data: unknown, uix: Record<string, any>) => Actions.event(uix.name, data, uix.anchor),
   clear_cache: Actions.clear_cache,
   more_info: Actions.more_info,
   toast: Actions.toast,

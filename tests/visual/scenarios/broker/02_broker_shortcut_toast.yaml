@@ -1,0 +1,46 @@
+id: broker_shortcut_toast
+description: "UIX Broker interaction for shortcut toast"
+view_path: broker-shortcut-toast
+
+setup:
+  - type: ha_service
+    domain: light
+    service: turn_on
+    data:
+      entity_id: light.bed_light
+      brightness: 181
+      color_temp_kelvin: 2631
+  - type: ha_service
+    domain: light
+    service: turn_on
+    data:
+      entity_id: light.ceiling_lights
+      brightness: 181
+      color_temp_kelvin: 2631
+  - type: add_broker_file
+    file_path: uix/test_broker_shortcut_toast.yaml
+
+card:
+  type: heading
+  heading: "Broker Shortcut Toast Test"
+
+interactions:
+  - type: input_text
+    root: hui-heading-card
+    selector: ha-card
+    text: "z"
+    settle_ms: 50
+  - type: wait
+    ms: 3000
+
+assertions:
+  - type: element_present
+    root: notification-manager
+    selector: ha-toast[data-notification-key="identified-toast-message-z"]
+  - type: snapshot
+    name: "57_broker_shortcut_toast"
+    threshold: 0.01
+
+teardown:
+  - type: remove_broker_file
+    file_path: uix/test_broker_shortcut_toast.yaml

@@ -24,6 +24,7 @@ import {
 } from "./helpers/apply_uix";
 import { compare_deep, merge_deep } from "./helpers/dict_functions";
 import { applyFrontendThemeOnElement } from "./helpers/frontend_themes";
+import { getCustomPanelName, isEmbeddedPanel } from "./helpers/hass";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -55,6 +56,16 @@ export class Uix extends LitElement {
   _processStylesOnConnect: boolean = false;
   @property() _rendered_styles: string = "";
   _renderer: (_: string) => void;
+
+  private _uixUpdateListener = (ev: Event) => {
+    this.dynamicVariablesHaveChanged =
+      (ev as CustomEvent).detail?.variablesChanged || false;
+    if (!this.isConnected) {
+      this._processStylesOnConnect = true;
+      return;
+    }
+    this._process_styles(this.uix_input);
+  };
 
   _cancel_style_child = [];
 
@@ -89,23 +100,9 @@ export class Uix extends LitElement {
     return apply_uix_compatible;
   }
 
-  constructor() {
-    super();
-
-    // uix_update is issued when themes are reloaded
-    document.addEventListener("uix_update", (ev: Event) => {
-      // Don't process disconnected elements
-      this.dynamicVariablesHaveChanged = (ev as CustomEvent).detail?.variablesChanged || false;
-      if (!this.isConnected) {
-        this._processStylesOnConnect = true;
-        return;
-      }
-      this._process_styles(this.uix_input);
-    });
-  }
-
   connectedCallback() {
     super.connectedCallback();
+    document.addEventListener("uix-update", this._uixUpdateListener);
     if (this._processStylesOnConnect) {
       this._processStylesOnConnect = false;
       this._debug("Processing styles on (Re)connect:", 
@@ -129,6 +126,15 @@ export class Uix extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._disconnect();
+
+    // DOM moves disconnect and reconnect custom elements synchronously. Delay
+    // unsubscription so those moves retain their listener; a node that remains
+    // detached becomes stale and will process current styles when reconnected.
+    Promise.resolve().then(() => {
+      if (this.isConnected) return;
+      document.removeEventListener("uix-update", this._uixUpdateListener);
+      this._processStylesOnConnect = true;
+    });
   }
 
   set styles(stl: UixStyle) {
@@ -395,7 +401,7 @@ export class Uix extends LitElement {
 if (!customElements.get("uix-node")) {
   customElements.define("uix-node", Uix);
   console.groupCollapsed(
-    `%c💡 UIX ${pjson.version} IS INSTALLED 💡`,
+    `%c💡 UIX ${pjson.version} IS INSTALLED 💡${isEmbeddedPanel() ? ` for ${getCustomPanelName() ?? "unknown"}` : ""}`,
     'color: white; background-color: #CE3226; padding: 2px 5px; font-weight: bold; border-radius: 5px;',
   );
   console.log('Documentation:', 'https://uix.lf.technology/');
@@ -407,7 +413,14 @@ if (!customElements.get("uix-node")) {
   // and then redefine uix-node if necessary
   // otherwise the customElements registry uix-node is defined in
   // may get overwritten by the polyfill if uix-node is loaded as a module
-  while (customElements.get("home-assistant") === undefined)
+  let baseElementName: string | undefined = undefined;
+  if (isEmbeddedPanel()) {
+    baseElementName = getCustomPanelName();
+  } else {
+    baseElementName = "home-assistant";
+  }
+  if (!baseElementName) return;
+  while (customElements.get(baseElementName) === undefined)
     await new Promise((resolve) => window.setTimeout(resolve, 100));
 
   if (!customElements.get("uix-node")) {

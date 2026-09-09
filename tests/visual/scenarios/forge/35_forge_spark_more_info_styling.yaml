@@ -19,8 +19,8 @@ card:
           ha-card.type-custom-uix-forge-blank-card  {
             box-shadow: 2px 4px red;
           }
-        ha-more-info-details $: |
-          ha-card {
+        ha-more-info-details $ ha-grouped-list $: |
+          div.base {
             box-shadow: 2px 4px green;
           }
 
@@ -49,6 +49,7 @@ assertions:
   - type: css_property
     root:
       - ha-more-info-details
-    selector: 'ha-card'
+      - ha-grouped-list
+    selector: div.base
     property: boxShadow
     expected: "rgb(0, 128, 0) 2px 4px 0px 0px"

@@ -81,6 +81,8 @@ plugins:
         - custom_components/uix/manifest.json
         - custom_components/uix/uix.js
         - custom_components/uix/uix.js.gz
+        - custom_components/uix/uixCustomPanel.js
+        - custom_components/uix/uixCustomPanel.js.gz
       message: "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
 
   - - "@semantic-release/github"

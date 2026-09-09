@@ -1,13 +1,15 @@
-from homeassistant.core import HomeAssistant
-from homeassistant.components.frontend import (
-    add_extra_js_url, 
-    remove_extra_js_url
-)
+from homeassistant.components.frontend import add_extra_js_url, remove_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.lovelace.resources import ResourceStorageCollection
+from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, FRONTEND_SCRIPT_URL
+from .const import (
+    DOMAIN,
+    FRONTEND_SCRIPT_CUSTOM_PANEL,
+    FRONTEND_SCRIPT_URL,
+)
 from .helpers import get_version
+
 
 async def async_register_static_path(hass: HomeAssistant) -> None:
     """Register the static path for the frontend script."""
@@ -18,7 +20,12 @@ async def async_register_static_path(hass: HomeAssistant) -> None:
                     f"/{DOMAIN}/{FRONTEND_SCRIPT_URL}",
                     hass.config.path(f"custom_components/{DOMAIN}/{FRONTEND_SCRIPT_URL}"),
                     True,
-                )
+                ),
+                StaticPathConfig(
+                    f"/{DOMAIN}/{FRONTEND_SCRIPT_CUSTOM_PANEL}",
+                    hass.config.path(f"custom_components/{DOMAIN}/{FRONTEND_SCRIPT_CUSTOM_PANEL}"),
+                    True,
+                ), 
             ]
         )   
     except RuntimeError:
@@ -100,4 +107,3 @@ async def async_remove_frontend_script_resource(hass: HomeAssistant) -> None:
                 else:
                     # not the best solution, but what else can we do
                     resources.data.remove(r)
-

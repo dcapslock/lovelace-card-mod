@@ -18,14 +18,11 @@ def _transpiled_console_debug() -> str:
             "-e",
             (
                 "const fs = require('fs');"
-                "const ts = require('typescript');"
+                "const esbuild = require('esbuild');"
                 "const path = process.argv[1];"
                 "const source = fs.readFileSync(path, 'utf8');"
-                "const { outputText } = ts.transpileModule(source, {"
-                "  compilerOptions: {"
-                "    target: ts.ScriptTarget.ES2020,"
-                "    module: ts.ModuleKind.None"
-                "  }"
+                "const { code: outputText } = esbuild.transformSync(source, {"
+                "  loader: 'ts', target: 'es2020'"
                 "});"
                 "process.stdout.write(outputText);"
             ),

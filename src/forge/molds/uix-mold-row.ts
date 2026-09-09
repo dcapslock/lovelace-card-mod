@@ -22,10 +22,12 @@ export class UixForgeMoldRow extends UixForgeMoldBase {
     }
     this.forge.dispatchEvent(new CustomEvent("row-visibility-changed", { detail: { row: this.forge, value: !this.forge.hidden }, bubbles: true, composed: true }));
     // entities card sets hidden which will be true until templates are bound, so we need to ensure the row is shown after templates are bound
-    if (!this.forge.hidden && this.forge.parentElement?.getAttribute("hidden") !== null) {
-      this.forge.parentElement.removeAttribute("hidden");
-    } else if (this.forge.hidden && this.forge.parentElement?.getAttribute("hidden") === null) {
-      this.forge.parentElement.setAttribute("hidden", "");
+    const parent = this.forge.parentElement;
+    if (!parent) return;
+    if (!this.forge.hidden && parent.getAttribute("hidden") !== null) {
+      parent.removeAttribute("hidden");
+    } else if (this.forge.hidden && parent.getAttribute("hidden") === null) {
+      parent.setAttribute("hidden", "");
     }
   }
 

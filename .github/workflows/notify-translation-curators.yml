@@ -102,7 +102,7 @@ jobs:
           echo "discussion_id=$discussion_id" >> "$GITHUB_OUTPUT"
       - name: Add Discussion comment
         if: steps.target.outputs.discussion_id != ''
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           DISCUSSION_ID: ${{ steps.target.outputs.discussion_id }}
           REPORT: ${{ steps.report.outputs.report }}

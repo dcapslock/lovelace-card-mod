@@ -59,6 +59,7 @@ nav:
        - Quick Start: /quick-start
        - UIX Styling: /using
        - UIX Forge: /forge
+       - UIX Broker: /broker
        - UIX Extras: /extras
        - UIX Guides: /guides
        - FAQ: /faq
@@ -74,6 +75,7 @@ nav:
           - using/images.md
           - using/section-backgrounds.md
           - using/view-backgrounds.md
+          - using/custom-panels.md
           - using/templates.md
           - using/themes.md
           - using/other.md
@@ -110,6 +112,14 @@ nav:
           - forge/sparks/overlay-icon.md
           - forge/sparks/background.md
           - forge/sparks/theme.md
+  - UIX Broker:
+      - broker/index.md
+      - broker/broker.md
+      - broker/realms.md
+      - broker/interaction-anchors.md
+      - broker/rules.md
+      - broker/directives.md
+      - broker/examples.md
   - UIX Extras:
       - extras/index.md
       - extras/uix-actions.md
@@ -118,6 +128,8 @@ nav:
       - extras/hash-template-variable-updates.md
       - extras/disable-icon-styling.md
       - extras/disable-entity-picture-image-override.md
+      - extras/always-patch-ha-card.md
+      - extras/style-custom-panels.md
   - UIX Guides: 'guides.md'
   - FAQ: 'faq.md'
 repo_url: https://github.com/Lint-Free-Technology/uix

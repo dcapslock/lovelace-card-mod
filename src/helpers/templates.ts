@@ -89,6 +89,14 @@ export function hasTemplate(str) {
   return String(str).includes("{%") || String(str).includes("{{");
 }
 
+/** Render a template once without creating a websocket subscription. */
+export async function render_template(template: string, variables: Record<string, any> = {}): Promise<string> {
+  const hs = await hass();
+  const result = await hs.callApi("POST", "template", { template, variables });
+  if (typeof result !== "string") throw new Error("Home Assistant returned a non-string template result");
+  return result;
+}
+
 export async function bind_template(
   callback: (string) => void,
   template: string,

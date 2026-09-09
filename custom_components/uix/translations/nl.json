@@ -19,7 +19,10 @@
                 "menu_options": {
                     "foundry_menu": "UI‑foundries beheren",
                     "foundry_file_menu": "Foundry‑bestanden beheren",
-                    "performance_settings": "Prestatie‑instellingen"
+                    "broker_settings": "Broker configureren",
+                    "broker_file_menu": "Broker-bestanden beheren",
+                    "performance_settings": "Prestatie‑instellingen",
+                    "experimental_settings": "Experimentele instellingen"
                 }
             },
             "foundry_menu": {
@@ -58,6 +61,48 @@
                     "disable_hash_template_variable": "Wanneer ingeschakeld, is de hash (het deel na # in de URL) templatevariabele niet beschikbaar en veroorzaken hash‑wijzigingen geen UIX‑template‑rebinds of UIX Forge‑updates.",
                     "disable_icon_styling": "Wanneer ingeschakeld, wordt het patchen van icoon-elementen (ha-icon, ha-state-icon, ha-svg-icon) voor aangepaste styling of overschrijvingen uitgeschakeld. Dit kan de CPU-belasting op tragere apparaten verminderen.",
                     "disable_entity_picture_image_override": "Wanneer ingeschakeld, wordt het patchen van badge- en markerelementen (ha-entity-marker, ha-tile-icon, state-badge, ha-user-badge, ha-person-badge) voor aangepaste entiteitsafbeelding-overschrijvingen uitgeschakeld. Dit kan de CPU-belasting op tragere apparaten verminderen."
+                }
+            },
+            "experimental_settings": {
+                "title": "Experimentele instellingen",
+                "description": "Configureer experimentele functies voor UIX.",
+                "data": {
+                    "always_patch_ha_card": "Altijd ha-card patchen",
+                    "style_custom_panels": "Aangepaste panelen stylen die als iframe worden geladen"
+                },
+                "data_description": {
+                    "always_patch_ha_card": "Wanneer ingeschakeld, wordt ha-card altijd gepatcht, zelfs wanneer er geen kaartconfiguratie is. Dit maakt patching mogelijk wanneer ha-card wordt gebruikt in instellingen dashboards of aangepaste panelen.",
+                    "style_custom_panels": "Wanneer ingeschakeld, wordt UIX‑thema‑styling toegepast op aangepaste panelen die als iframe worden geladen."
+                }
+            },
+            "broker_settings": {
+                "title": "UIX Broker",
+                "description": "Voer het canonieke UIX Broker-object in met de interacties onder de sleutel `uix_broker`.",
+                "data": {
+                    "uix_broker": "Broker-configuratie"
+                }
+            },
+            "broker_file_menu": {
+                "title": "Broker-bestanden",
+                "description": "**Geregistreerde Broker-bestanden:**\n{broker_files_list}",
+                "menu_options": {
+                    "register_broker_file": "Broker-bestand registreren",
+                    "deregister_broker_file": "Broker-bestand deregistreren",
+                    "reload_broker_files": "Broker-bestanden herladen"
+                }
+            },
+            "register_broker_file": {
+                "title": "Broker-bestand registreren",
+                "description": "Voer het pad in naar een YAML-bestand met Broker-interacties onder de top-level-sleutel 'uix_broker'. Het pad mag absoluut zijn of relatief aan de Home Assistant-configuratiemap.",
+                "data": {
+                    "file_path": "Bestandspad"
+                }
+            },
+            "deregister_broker_file": {
+                "title": "Broker-bestand deregistreren",
+                "description": "Selecteer het Broker-bestand dat je wilt deregistreren. Het bestand zelf wordt niet verwijderd — alleen de registratie binnen UIX wordt verwijderd.",
+                "data": {
+                    "file_path": "Bestand om te deregistreren"
                 }
             },
             "add_foundry": {
@@ -105,7 +150,8 @@
         },
         "abort": {
             "no_foundries": "Er zijn nog geen UI‑foundries geconfigureerd. Voeg er eerst één toe.",
-            "no_foundry_files": "Er zijn nog geen foundry‑bestanden geregistreerd. Registreer er eerst één."
+            "no_foundry_files": "Er zijn nog geen foundry‑bestanden geregistreerd. Registreer er eerst één.",
+            "no_broker_files": "Er zijn nog geen Broker-bestanden geregistreerd. Registreer er eerst één."
         },
         "error": {
             "invalid_config": "De configuratie moet een YAML‑mapping zijn.",
@@ -114,7 +160,14 @@
             "file_parse_error": "Het bestand kon niet als YAML worden geparseerd. Controleer het bestand op syntaxfouten.",
             "file_invalid_structure": "Het bestand moet een YAML‑mapping zijn.",
             "file_missing_key": "Het bestand moet een top‑level 'uix_foundries'‑key hebben.",
-            "file_invalid_foundries": "De 'uix_foundries'‑key moet een YAML‑mapping zijn van foundry‑namen naar configuraties."
+            "file_invalid_foundries": "De 'uix_foundries'‑key moet een YAML‑mapping zijn van foundry‑namen naar configuraties.",
+            "invalid_broker_config": "De configuratie moet een object met een lijst 'uix_broker' bevatten.",
+            "broker_file_already_added": "Dit Broker-bestandspad is al geregistreerd.",
+            "broker_file_not_found": "Het Broker-bestand is niet gevonden. Controleer het pad en probeer opnieuw.",
+            "broker_file_parse_error": "Het Broker-bestand kon niet als YAML worden geparseerd. Controleer het bestand op syntaxfouten.",
+            "broker_file_invalid_structure": "Het Broker-bestand moet een YAML-mapping zijn.",
+            "broker_file_missing_key": "Het Broker-bestand moet een top-level-sleutel 'uix_broker' hebben.",
+            "broker_file_invalid_config": "De sleutel 'uix_broker' moet een YAML-lijst met Broker-interacties zijn."
         }
     }
 }

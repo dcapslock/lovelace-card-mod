@@ -1,4 +1,12 @@
 {
   "schema": 1,
-  "languages": []
+  "languages": [
+    {
+      "code": "de",
+      "name": "Deutsch",
+      "url": "https://opensource.ugso-software.de/projects/uix/",
+      "metadata_url": "https://opensource.ugso-software.de/projects/uix/uix-docs.json",
+      "curators": ["rockbaer2007"]
+    }
+  ]
 }

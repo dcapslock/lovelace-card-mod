@@ -18,6 +18,16 @@ lovelace:
 frontend:
   themes: !include themes.yaml
 
+panel_custom:
+  - name: test-custom-panel
+    # url_path needs to be unique for each panel_custom config
+    url_path: test-custom-panel
+    module_url: /local/test-custom-panel.js
+    embed_iframe: true
+    config:
+      # Data you want to make available to panel
+      hello: world
+
 input_boolean:
   test_boolean:
     name: Test Boolean

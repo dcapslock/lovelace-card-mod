@@ -77,6 +77,10 @@ interactions:
           :host {
             {{ temp_icon_color_for_all() }}
           }
+        "ha-more-info-info $": |
+          div.container div.content ha-more-info-history {
+            display: none;
+          }
   - type: ha_service
     domain: frontend
     service: reload_themes
@@ -186,6 +190,10 @@ teardown:
         .: |
           :host {
             {{ temp_icon_color_for_all() }}
+          }
+        "ha-more-info-info $": |
+          div.container div.content ha-more-info-history {
+            display: none;
           }
   - type: ha_service
     domain: frontend

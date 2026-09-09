@@ -10,8 +10,12 @@ UIX can substitute the background entity image displayed by the following elemen
 - `state-badge` (state badges)
 - `ha-user-badge` (user badges)
 - `ha-person-badge` (person badges)
+- `hui-entity-badge` (entity badge)
 
 Styling can be via [specifying for an entity override](#specifying-for-an-entity-override) or a [generic override](#specifying-generic-override).
+
+!!! note
+    When styling entity image for an entity badge (`hui-entity-badge`), you must set **Show entity picture** (`show_entity_picture: true` in YAML).
 
 ## Specifying for an entity override
 

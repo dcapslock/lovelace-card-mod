@@ -35,7 +35,14 @@ pytest tests/
 ### Smoke tests only (no Lovelace scenarios)
 
 ```bash
-pytest tests/visual/test_uix_styling.py
+pytest \
+  tests/visual/test_uix_styling.py \
+  tests/test_connection_disable_entity_picture_image_override.py \
+  tests/test_connection_disable_hash_template_variable.py \
+  tests/test_connection_disable_icon_styling.py \
+  tests/test_connection_style_custom_panels.py \
+  tests/test_console_debug_dom_helpers.py \
+  tests/test_forge_config_builder.py
 ```
 
 ### Run all visual scenarios

@@ -1,0 +1,35 @@
+uix_broker:
+  - realm: browser
+    listen: show-dialog
+    anchor: '&home-assistant $ hui-dialog-create-card'
+    rules:
+      - '@captured.dialogTag': hui-dialog-create-card
+    directives:
+      - type: property
+        set: _currTab
+        value: card
+        wait: 1000
+      - type: property
+        anchor: >-
+          $ ha-dialog div.body hui-card-picker $ div#content div:nth-of-type(1)
+          ha-expansion-panel
+        set: expanded
+        value: true
+      - type: property
+        anchor: >-
+          $ ha-dialog div.body hui-card-picker $
+          div#content>ha-expansion-panel:nth-of-type(1)
+        set: expanded
+        value: false
+      - type: property
+        anchor: >-
+          $ ha-dialog div.body hui-card-picker $
+          div#content>ha-expansion-panel:nth-of-type(2)
+        set: expanded
+        value: false
+      - type: property
+        anchor: >-
+          $ ha-dialog div.body hui-card-picker $
+          div#content>ha-expansion-panel:nth-of-type(3)
+        set: expanded
+        value: false

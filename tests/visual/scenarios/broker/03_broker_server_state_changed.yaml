@@ -1,0 +1,39 @@
+id: broker_server_state_changed
+description: "UIX Broker interaction for server state changed"
+view_path: broker-server-state-changed
+
+setup:
+  - type: ha_service
+    domain: light
+    service: turn_off
+    data:
+      entity_id: light.bed_light
+  - type: add_broker_file
+    file_path: uix/test_broker_server_state_changed.yaml
+
+card:
+  type: heading
+  heading: "Broker Server State Changed Test"
+
+interactions:
+  - type: ha_service
+    domain: light
+    service: turn_on
+    data:
+      entity_id: light.bed_light
+      brightness: 181
+      color_temp_kelvin: 2631
+  - type: wait
+    ms: 3000
+
+assertions:
+  - type: element_present
+    root: notification-manager
+    selector: ha-toast[data-notification-key="identified-toast-message-bed-light"]
+  - type: snapshot
+    name: "58_broker_server_state_changed"
+    threshold: 0.01
+
+teardown:
+  - type: remove_broker_file
+    file_path: uix/test_broker_server_state_changed.yaml

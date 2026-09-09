@@ -1,0 +1,78 @@
+id: custom_panel_iframe
+description: "UIX injects to a custom panel iframe"
+view_path: custom_panel_iframe
+
+theme: uix-custom-panel-theme
+
+setup:
+  - type: ha_service
+    domain: input_boolean
+    service: turn_off
+    data:
+      entity_id: input_boolean.test_boolean
+
+cards:
+  - show_name: true
+    show_icon: false
+    type: button
+    name: Set Custom Panel Styling
+    grid_options:
+      columns: 6
+      rows: 1
+    tap_action:
+      action: fire-dom-event
+      uix:
+        action: javascript
+        data:
+          code: |
+            window.uixCoordinator.setStyleCustomPanelsOverride(true);
+            window.setTimeout(() => {
+              window.uixCoordinator.setStyleCustomPanelsOverride(null);
+            }, 2500);
+  - type: shortcut
+    tap_action:
+      action: navigate
+      navigation_path: /test-custom-panel
+    vertical: false
+
+interactions:
+  - type: click
+    root: hui-button-card
+    selector: ha-card
+    settle_ms: 100
+  - type: click
+    root: hui-shortcut-card
+    selector: ha-card
+    settle_ms: 1000
+  - type: set_theme_file
+    theme: uix-custom-panel-theme
+    values:
+      primary-background-color: "gray"
+      sidebar-background-color: "gray"
+  - type: ha_service
+    domain: frontend
+    service: reload_themes
+  - type: wait
+    ms: 2000
+  - type: ha_service
+    domain: input_boolean
+    service: turn_on
+    data:
+      entity_id: input_boolean.test_boolean
+  - type: wait
+    ms: 1000
+
+assertions:
+  - type: snapshot
+    name: "55_custom_panel_iframe"
+    threshold: 0.02
+
+teardown:
+  - type: set_theme_file
+    theme: uix-custom-panel-theme
+    values:
+      primary-background-color: "white"
+      sidebar-background-color: "white"
+  - type: ha_service
+    domain: frontend
+    service: reload_themes

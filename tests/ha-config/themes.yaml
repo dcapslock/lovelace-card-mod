@@ -312,6 +312,10 @@ uix-icon-for-entity-theme:
       :host {
         {{ temp_icon_color_for_all() }}
       }
+    "ha-more-info-info $": |
+      div.container div.content ha-more-info-history {
+        display: none;
+      }
 
 uix-doc-icon-for-entity-theme:
   uix-theme: uix-doc-icon-for-entity-theme
@@ -394,3 +398,29 @@ uix-stacked-toast-theme:
         color: white;
       }
       {% endif %}
+
+uix-custom-panel-theme:
+  primary-background-color: "white"
+  sidebar-background-color: "white"
+
+  uix-theme: uix-custom-panel-theme
+  uix-test-custom-panel-yaml: |
+    .: |
+      :host::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: gray;
+      }
+      wired-card {
+        background: {{ 'red' if is_state('input_boolean.test_boolean', 'on') else 'gray' }} !important;
+        color: white !important;
+      }
+    wired-card $: |
+      div#overlay {
+        color: yellow;
+        box-shadow: 0 0 10px 5px yellow;
+      }

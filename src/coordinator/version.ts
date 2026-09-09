@@ -1,6 +1,6 @@
 import pjson from "../../package.json";
 import { compareVersions } from "compare-versions";
-import { hass_base_el, hass } from "../helpers/hass";
+import { hass_base_el, hass, isEmbeddedPanel } from "../helpers/hass";
 import { selectTree } from "../helpers/selecttree";
 import { Actions } from "../ll-custom-actions";
 
@@ -26,6 +26,7 @@ export const VersionMixin = (SuperClass) => {
     }
 
     async _checkVersion() {
+      if (isEmbeddedPanel()) return;
       if (this.version && this.version !== this._browserVersion) {
         if (!this._versionNotificationPending) {
           this._versionNotificationPending = true;
@@ -191,3 +192,4 @@ export const VersionMixin = (SuperClass) => {
     }
   };
 };
+

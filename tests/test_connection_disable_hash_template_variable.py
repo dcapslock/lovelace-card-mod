@@ -16,10 +16,10 @@ def test_disable_hash_template_variable_setting_and_override() -> None:
             "-e",
             (
                 "const fs = require('fs');"
-                "const ts = require('typescript');"
+                "const esbuild = require('esbuild');"
                 "const source = fs.readFileSync(process.argv[1], 'utf8');"
-                "const { outputText } = ts.transpileModule(source, {"
-                "  compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS }"
+                "const { code: outputText } = esbuild.transformSync(source, {"
+                "  loader: 'ts', format: 'cjs', target: 'es2020'"
                 "});"
                 "const moduleObj = { exports: {} };"
                 "const customRequire = (name) => {"

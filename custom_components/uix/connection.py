@@ -7,8 +7,10 @@ from homeassistant.components.websocket_api import (
 from homeassistant.components import websocket_api
 import voluptuous as vol
 
-from .helpers import get_version, resolve_foundries, get_all_foundries, validate_foundry_file, check_all_foundry_files
+from .helpers import check_all_broker_files, get_all_broker_configs, get_version, resolve_foundries, get_all_foundries, validate_broker_file, validate_foundry_file, check_all_foundry_files
 from .const import (
+    CONF_ALWAYS_PATCH_HA_CARD,
+    CONF_STYLE_CUSTOM_PANELS,
     DOMAIN,
     WS_CONNECT,
     WS_LOG,
@@ -19,7 +21,13 @@ from .const import (
     WS_REMOVE_FOUNDRY_FILE,
     WS_RELOAD_FOUNDRY_FILES,
     WS_CHECK_FOUNDRY_FILES,
+    WS_ADD_BROKER_FILE,
+    WS_REMOVE_BROKER_FILE,
+    WS_RELOAD_BROKER_FILES,
+    WS_CHECK_BROKER_FILES,
     CONF_FOUNDRIES,
+    CONF_UIX_BROKER,
+    CONF_UIX_BROKER_FILES,
     CONF_FOUNDRY_FILES,
     CONF_HASS_THROTTLE_ENABLE,
     CONF_HASS_THROTTLE_MS,
@@ -64,6 +72,10 @@ async def async_setup_connection(hass: HomeAssistant) -> None:
                     disable_hash_template_variable = False
                     disable_icon_styling = False
                     disable_entity_picture_image_override = False
+                    always_patch_ha_card = False
+                    style_custom_panels = False
+                    uix_broker: list[dict] = []
+                    uix_broker_files: list[str] = []
                     if entries:
                         foundries = dict(entries[0].options.get(CONF_FOUNDRIES, {}))
                         file_paths = list(entries[0].options.get(CONF_FOUNDRY_FILES, []))
@@ -73,6 +85,10 @@ async def async_setup_connection(hass: HomeAssistant) -> None:
                         disable_hash_template_variable = entries[0].options.get(CONF_DISABLE_HASH_TEMPLATE_VARIABLE, False)
                         disable_icon_styling = entries[0].options.get(CONF_DISABLE_ICON_STYLING, False)
                         disable_entity_picture_image_override = entries[0].options.get(CONF_DISABLE_ENTITY_PICTURE_IMAGE_OVERRIDE, False)
+                        always_patch_ha_card = entries[0].options.get(CONF_ALWAYS_PATCH_HA_CARD, False)
+                        style_custom_panels = entries[0].options.get(CONF_STYLE_CUSTOM_PANELS, False)
+                        uix_broker = list(entries[0].options.get(CONF_UIX_BROKER, []))
+                        uix_broker_files = list(entries[0].options.get(CONF_UIX_BROKER_FILES, []))
                     send_update({
                         CONF_FOUNDRIES: await hass.async_add_executor_job(get_all_foundries, hass, foundries, file_paths),
                         CONF_HASS_THROTTLE_ENABLE: throttle_enable,
@@ -81,9 +97,14 @@ async def async_setup_connection(hass: HomeAssistant) -> None:
                         CONF_DISABLE_HASH_TEMPLATE_VARIABLE: disable_hash_template_variable,
                         CONF_DISABLE_ICON_STYLING: disable_icon_styling,
                         CONF_DISABLE_ENTITY_PICTURE_IMAGE_OVERRIDE: disable_entity_picture_image_override,
+                        CONF_ALWAYS_PATCH_HA_CARD: always_patch_ha_card,
+                        CONF_STYLE_CUSTOM_PANELS: style_custom_panels,
+                        CONF_UIX_BROKER: await hass.async_add_executor_job(
+                            get_all_broker_configs, hass, uix_broker, uix_broker_files
+                        ),
                     })
                 except Exception:
-                    _LOGGER.exception("Error pushing foundry update to client")
+                    _LOGGER.exception("Error pushing UIX configuration update to client")
             hass.async_create_task(_push())
 
         remove_listener = hass.bus.async_listen(EVENT_FOUNDRIES_UPDATED, on_foundries_updated)
@@ -104,6 +125,10 @@ async def async_setup_connection(hass: HomeAssistant) -> None:
         disable_hash_template_variable = False
         disable_icon_styling = False
         disable_entity_picture_image_override = False
+        always_patch_ha_card = False
+        style_custom_panels = False
+        uix_broker: list[dict] = []
+        uix_broker_files: list[str] = []
         if entries:
             foundries = dict(entries[0].options.get(CONF_FOUNDRIES, {}))
             file_paths = list(entries[0].options.get(CONF_FOUNDRY_FILES, []))
@@ -113,6 +138,10 @@ async def async_setup_connection(hass: HomeAssistant) -> None:
             disable_hash_template_variable = entries[0].options.get(CONF_DISABLE_HASH_TEMPLATE_VARIABLE, False)
             disable_icon_styling = entries[0].options.get(CONF_DISABLE_ICON_STYLING, False)
             disable_entity_picture_image_override = entries[0].options.get(CONF_DISABLE_ENTITY_PICTURE_IMAGE_OVERRIDE, False)
+            always_patch_ha_card = entries[0].options.get(CONF_ALWAYS_PATCH_HA_CARD, False)
+            style_custom_panels = entries[0].options.get(CONF_STYLE_CUSTOM_PANELS, False)
+            uix_broker = list(entries[0].options.get(CONF_UIX_BROKER, []))
+            uix_broker_files = list(entries[0].options.get(CONF_UIX_BROKER_FILES, []))
         send_update({
             CONF_FOUNDRIES: await hass.async_add_executor_job(get_all_foundries, hass, foundries, file_paths),
             CONF_HASS_THROTTLE_ENABLE: throttle_enable,
@@ -121,6 +150,11 @@ async def async_setup_connection(hass: HomeAssistant) -> None:
             CONF_DISABLE_HASH_TEMPLATE_VARIABLE: disable_hash_template_variable,
             CONF_DISABLE_ICON_STYLING: disable_icon_styling,
             CONF_DISABLE_ENTITY_PICTURE_IMAGE_OVERRIDE: disable_entity_picture_image_override,
+            CONF_ALWAYS_PATCH_HA_CARD: always_patch_ha_card,
+            CONF_STYLE_CUSTOM_PANELS: style_custom_panels,
+            CONF_UIX_BROKER: await hass.async_add_executor_job(
+                get_all_broker_configs, hass, uix_broker, uix_broker_files
+            ),
         })
     
     @websocket_api.websocket_command(
@@ -279,6 +313,88 @@ async def async_setup_connection(hass: HomeAssistant) -> None:
         result = await hass.async_add_executor_job(check_all_foundry_files, hass, file_paths)
         connection.send_result(msg["id"], result)
 
+    @websocket_api.websocket_command(
+        {
+            vol.Required("type"): WS_ADD_BROKER_FILE,
+            vol.Required("file_path"): str,
+        }
+    )
+    @websocket_api.async_response
+    async def handle_add_broker_file(hass: HomeAssistant, connection, msg):
+        """Add a Broker YAML file path to the config entry."""
+        entries = hass.config_entries.async_entries(DOMAIN)
+        if not entries:
+            connection.send_error(msg["id"], "no_entry", "No UIX config entry found")
+            return
+        entry = entries[0]
+        file_path: str = msg["file_path"]
+        file_paths: list[str] = list(entry.options.get(CONF_UIX_BROKER_FILES, []))
+        if file_path in file_paths:
+            connection.send_error(msg["id"], "already_added", f"Broker file '{file_path}' is already registered")
+            return
+        error_key = await hass.async_add_executor_job(validate_broker_file, hass, file_path)
+        if error_key is not None:
+            connection.send_error(msg["id"], error_key, f"Broker file validation failed: {error_key}")
+            return
+        file_paths.append(file_path)
+        hass.config_entries.async_update_entry(
+            entry, options={**entry.options, CONF_UIX_BROKER_FILES: file_paths}
+        )
+        hass.bus.async_fire(EVENT_FOUNDRIES_UPDATED, {})
+        connection.send_result(msg["id"], {})
+
+    @websocket_api.websocket_command(
+        {
+            vol.Required("type"): WS_REMOVE_BROKER_FILE,
+            vol.Required("file_path"): str,
+        }
+    )
+    @websocket_api.async_response
+    async def handle_remove_broker_file(hass: HomeAssistant, connection, msg):
+        """Remove a Broker YAML file path from the config entry."""
+        entries = hass.config_entries.async_entries(DOMAIN)
+        if not entries:
+            connection.send_error(msg["id"], "no_entry", "No UIX config entry found")
+            return
+        entry = entries[0]
+        file_path: str = msg["file_path"]
+        file_paths: list[str] = list(entry.options.get(CONF_UIX_BROKER_FILES, []))
+        if file_path not in file_paths:
+            connection.send_error(msg["id"], "not_found", f"Broker file '{file_path}' is not registered")
+            return
+        file_paths.remove(file_path)
+        hass.config_entries.async_update_entry(
+            entry, options={**entry.options, CONF_UIX_BROKER_FILES: file_paths}
+        )
+        hass.bus.async_fire(EVENT_FOUNDRIES_UPDATED, {})
+        connection.send_result(msg["id"], {})
+
+    @websocket_api.websocket_command(
+        {
+            vol.Required("type"): WS_RELOAD_BROKER_FILES,
+        }
+    )
+    @websocket_api.async_response
+    async def handle_reload_broker_files(hass: HomeAssistant, connection, msg):
+        """Re-read all registered Broker files and push updates to clients."""
+        hass.bus.async_fire(EVENT_FOUNDRIES_UPDATED, {})
+        connection.send_result(msg["id"], {})
+
+    @websocket_api.websocket_command(
+        {
+            vol.Required("type"): WS_CHECK_BROKER_FILES,
+        }
+    )
+    @websocket_api.async_response
+    async def handle_check_broker_files(hass: HomeAssistant, connection, msg):
+        """Validate all registered Broker files and return errors."""
+        entries = hass.config_entries.async_entries(DOMAIN)
+        file_paths: list[str] = []
+        if entries:
+            file_paths = list(entries[0].options.get(CONF_UIX_BROKER_FILES, []))
+        result = await hass.async_add_executor_job(check_all_broker_files, hass, file_paths)
+        connection.send_result(msg["id"], result)
+
     async_register_command(hass, handle_connect)
     async_register_command(hass, handle_log)
     async_register_command(hass, handle_get_foundries)
@@ -288,3 +404,7 @@ async def async_setup_connection(hass: HomeAssistant) -> None:
     async_register_command(hass, handle_remove_foundry_file)
     async_register_command(hass, handle_reload_foundry_files)
     async_register_command(hass, handle_check_foundry_files)
+    async_register_command(hass, handle_add_broker_file)
+    async_register_command(hass, handle_remove_broker_file)
+    async_register_command(hass, handle_reload_broker_files)
+    async_register_command(hass, handle_check_broker_files)

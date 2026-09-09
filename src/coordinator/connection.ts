@@ -10,11 +10,14 @@ export const ConnectionMixin = (SuperClass) => {
     private _connected = false;
     private _connectionResolve;
     private _foundries: Record<string, any> = {};
+    private _broker: Record<string, any>[] = [];
     private _hassThrottleOverride: { enable?: boolean; ms?: number } | null = null;
     private _dialogApplyAfterShowOverride: boolean | null = null;
     private _disableHashTemplateVariableOverride: boolean | null = null;
     private _disableIconStylingOverride: boolean | null = null;
     private _disableEntityPictureImageOverrideOverride: boolean | null = null;
+    private _alwaysPatchHaCardOverride: boolean | null = null;
+    private _styleCustomPanelsOverride: boolean | null = null;
 
     public connectionPromise = new Promise((resolve) => {
       this._connectionResolve = resolve;
@@ -137,6 +140,11 @@ export const ConnectionMixin = (SuperClass) => {
         this.fireWindowEvent("uix-foundries-updated", { foundries: this._foundries });
       }
 
+      if (cfg.uix_broker !== undefined) {
+        this._broker = Array.isArray(cfg.uix_broker) ? cfg.uix_broker : [];
+        this.fireWindowEvent("uix-broker-updated", { uix_broker: this._broker });
+      }
+
       this.fireBrowserEvent("uix-config-update");
 
       // future update handling can be added here
@@ -154,6 +162,15 @@ export const ConnectionMixin = (SuperClass) => {
         this.fireWindowEvent("uix-foundries-updated", { foundries: this._foundries });
       } catch (err) {
         console.log("UIX: Error fetching foundries:", err);
+      }
+    }
+
+    private async reloadBrokerFiles() {
+      if (!this.connection) return;
+      try {
+        await this.connection.sendMessagePromise({ type: "uix/reload_broker_files" });
+      } catch (err) {
+        console.log("UIX: Error reloading Broker files:", err);
       }
     }
 
@@ -200,6 +217,7 @@ export const ConnectionMixin = (SuperClass) => {
 
       window.addEventListener("config-refresh", () => {
         this.fetchFoundries();
+        this.reloadBrokerFiles();
       });
 
       provideHass(this);
@@ -219,6 +237,10 @@ export const ConnectionMixin = (SuperClass) => {
 
     get foundries(): Record<string, any> {
       return this._foundries;
+    }
+
+    get broker(): Record<string, any>[] {
+      return this._broker;
     }
 
     get hassThrottleEnable(): boolean {
@@ -261,6 +283,20 @@ export const ConnectionMixin = (SuperClass) => {
         return this._disableEntityPictureImageOverrideOverride;
       }
       return this._data?.disable_entity_picture_image_override ?? false;
+    }
+
+    get alwaysPatchHaCard(): boolean {
+      if (this._alwaysPatchHaCardOverride !== null) {
+        return this._alwaysPatchHaCardOverride;
+      }
+      return this._data?.always_patch_ha_card ?? false;
+    }
+
+    get styleCustomPanels(): boolean {
+      if (this._styleCustomPanelsOverride !== null) {
+        return this._styleCustomPanelsOverride;
+      }
+      return this._data?.style_custom_panels ?? false;
     }
 
     /**
@@ -350,6 +386,38 @@ export const ConnectionMixin = (SuperClass) => {
      */
     public setDisableEntityPictureImageOverrideOverride(value: boolean | null = null): void {
       this._disableEntityPictureImageOverrideOverride = value;
+    }
+
+    /** 
+     * Set a client-side override for always patching ha-card.
+     *
+     * This allows integrations to always patch ha-card for the current
+     * browser session without changing backend settings.
+     *
+     * Call with `null` (or no argument) to clear the override and revert to
+     * the server-configured value.
+     * 
+     * A page refresh will be required to cover all ha-card instances on the page, 
+     * as this setting is only checked when a ha-card is first patched or updated
+     */
+    public setAlwaysPatchHaCardOverride(value: boolean | null = null): void {
+      this._alwaysPatchHaCardOverride = value;
+    }
+
+    /**
+     * Set a client-side override for styling custom panels.
+     *
+     * This allows integrations to style custom panels for the current
+     * browser session without changing backend settings.
+     *
+     * Call with `null` (or no argument) to clear the override and revert to
+     * the server-configured value.
+     * 
+     * A page refresh will be required to cover any currently loaded custom panel, 
+     * as this setting is only checked when a custom panel is first patched or updated
+     */
+    public setStyleCustomPanelsOverride(value: boolean | null = null): void {
+      this._styleCustomPanelsOverride = value;
     }
   }
 

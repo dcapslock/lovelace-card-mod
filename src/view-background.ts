@@ -3,7 +3,7 @@ import { hass } from "./helpers/hass";
 import { apply_uix } from "./helpers/apply_uix";
 
 /**
- * How long (ms) to wait after a style-render event or `uix_update` before
+ * How long (ms) to wait after a style-render event or `uix-update` before
  * reading CSS variables.  Gives the UIX async rendering pipeline time to
  * flush before we call `getComputedStyle`.
  */

@@ -32,10 +32,12 @@ export class UixForgeMoldCardAsRow extends UixForgeMoldBase {
       bubbles: true,
       composed: true,
     }));
-    if (!this.forge.hidden && this.forge.parentElement?.getAttribute("hidden") !== null) {
-      this.forge.parentElement.removeAttribute("hidden");
-    } else if (this.forge.hidden && this.forge.parentElement?.getAttribute("hidden") === null) {
-      this.forge.parentElement.setAttribute("hidden", "");
+    const parent = this.forge.parentElement;
+    if (!parent) return;
+    if (!this.forge.hidden && parent.getAttribute("hidden") !== null) {
+      parent.removeAttribute("hidden");
+    } else if (this.forge.hidden && parent.getAttribute("hidden") === null) {
+      parent.setAttribute("hidden", "");
     }
   }
 

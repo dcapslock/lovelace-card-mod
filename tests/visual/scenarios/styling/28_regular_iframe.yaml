@@ -1,0 +1,67 @@
+id: regular_iframe
+description: "UIX injects to a regular iframe when not custom panel"
+view_path: regular_iframe
+
+setup:
+  - type: ha_service
+    domain: light
+    service: turn_on
+    data:
+      entity_id: light.bed_light
+      brightness: 181
+      color_temp_kelvin: 2631
+
+dashboard:
+  views:
+    - type: sections
+      sections:
+        - type: grid
+          cards:
+            - type: heading
+              heading: New section
+            - type: tile
+              entity: light.bed_light
+              vertical: false
+              features_position: bottom
+              grid_options:
+                columns: 12
+                rows: 1
+              uix:
+                style: |
+                  :host {
+                    --card-background-color: red;
+                    --primary-text-color: {{ 'yellow' if is_state(config.entity, 'on') else 'grey'}};
+                  }
+            - type: shortcut
+              tap_action:
+                action: navigate
+                navigation_path: /ha-tests/host
+              vertical: false
+              grid_options:
+                columns: 12
+                rows: 1
+      max_columns: 4
+      title: Target
+      cards: []
+    - type: sections
+      max_columns: 4
+      title: Host
+      path: host
+      sections:
+        - type: grid
+          cards:
+            - type: iframe
+              url: /ha-tests/0
+
+interactions:
+  - type: click
+    root: hui-shortcut-card
+    selector: ha-card
+    settle_ms: 100
+  - type: wait
+    ms: 3000
+
+assertions:
+  - type: snapshot
+    name: "59_regular_iframe"
+    threshold: 0.02

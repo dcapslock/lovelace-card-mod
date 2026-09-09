@@ -1,0 +1,72 @@
+id: broker_add_card_defaults
+description: "UIX Broker interaction for changing add card defaults"
+view_path: broker-add-card-defaults
+
+setup:
+  - type: ha_service
+    domain: light
+    service: turn_on
+    data:
+      entity_id: light.bed_light
+      brightness: 181
+      color_temp_kelvin: 2631
+  - type: ha_service
+    domain: light
+    service: turn_on
+    data:
+      entity_id: light.ceiling_lights
+      brightness: 181
+      color_temp_kelvin: 2631
+  - type: add_broker_file
+    file_path: uix/test_broker_add_card.yaml
+
+card:
+  type: shortcut
+  tap_action:
+    action: navigate
+    navigation_path: /ha-tests?edit=1
+  vertical: false
+
+interactions:
+  - type: click
+    root: hui-shortcut-card
+    selector: ha-card
+    settle_ms: 500
+  - type: click
+    root: hui-grid-section
+    selector: .add
+    settle_ms: 3000
+
+assertions:
+  - type: object_property_text_equals
+    root: home-assistant
+    selector: hui-dialog-create-card
+    property: _currTab
+    expected: card
+  - type: object_property_text_equals
+    root: hui-card-picker
+    selector: div#content div ha-expansion-panel:nth-of-type(1)
+    property: expanded
+    expected: "true"
+  - type: object_property_text_equals
+    root: hui-card-picker
+    selector: "div#content > ha-expansion-panel:nth-of-type(1)"
+    property: expanded
+    expected: "false"
+  - type: object_property_text_equals
+    root: hui-card-picker
+    selector: "div#content > ha-expansion-panel:nth-of-type(2)"
+    property: expanded
+    expected: "false"
+  - type: object_property_text_equals
+    root: hui-card-picker
+    selector: "div#content > ha-expansion-panel:nth-of-type(3)"
+    property: expanded
+    expected: "false"
+  - type: snapshot
+    name: "56_broker_add_card_defaults"
+    threshold: 0.01
+
+teardown:
+  - type: remove_broker_file
+    file_path: uix/test_broker_add_card.yaml

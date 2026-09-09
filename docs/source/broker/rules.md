@@ -105,16 +105,18 @@ Use `type: user_is_admin` to match the current user's administrator status.
 With no matcher it means “is an admin”; set `match` or `value` to `false` for
 non-admin users. It supports the same advanced matcher objects.
 
-```yaml
-rules:
-  - type: user_is_admin
+Admin user:
 
-  # A non-admin user whose name or id starts with wall-.
-  - type: user
-    match: wall-*
-  - type: user_is_admin
-    match: false
-```
+    rules:
+      - type: user_is_admin
+
+Non-admin user whose name or id starts with wall-:
+
+    rules:
+      - type: user
+        match: wall-*
+      - type: user_is_admin
+        match: false
 
 ### Browser URL fragment
 

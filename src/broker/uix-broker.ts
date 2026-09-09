@@ -146,6 +146,27 @@ function browserSearchValue(path: string): { exists: boolean; value: string | un
   return { exists: params.has(path), value: params.get(path) ?? undefined };
 }
 
+type BrokerUser = {
+  id?: unknown;
+  name?: unknown;
+  is_admin?: unknown;
+};
+
+/**
+ * Read the user synchronously so user rules can be evaluated before a block
+ * directive needs to decide whether to stop browser event propagation.
+ */
+function browserUser(): BrokerUser | undefined {
+  const coordinatorUser = (window as any).uixCoordinator?.user;
+  if (coordinatorUser && typeof coordinatorUser === "object") return coordinatorUser;
+
+  for (const element of document.querySelectorAll("home-assistant, hc-main")) {
+    const user = (element as any).hass?.user;
+    if (user && typeof user === "object") return user;
+  }
+  return undefined;
+}
+
 /**
  * Captured references use dot-separated properties, with bracketed numeric
  * indexes and quoted object keys. `items.0`, `items[0]`, and `items.[0]` are
@@ -380,6 +401,47 @@ export function matchesCapturedValue(actual: unknown, matcher: any, ignoreCase =
   }
   if (expected.includes("*")) return new RegExp(`^${escapedWildcardPattern(expected)}$`).test(received);
   return received === expected;
+}
+
+/**
+ * Match a user name or id. A positive matcher may match either identity; a
+ * negated matcher must exclude both. This keeps `not` and `!=` useful when a
+ * user has a human-readable name and an unrelated stable id.
+ */
+function matchesUserValue(user: BrokerUser | undefined, matcher: any): boolean {
+  const identities = user === undefined
+    ? []
+    : [user.name, user.id].filter((value) => value !== undefined && value !== null);
+  const exists = identities.length > 0;
+
+  if (Array.isArray(matcher)) return matcher.every((item) => matchesUserValue(user, item));
+
+  if (matcher && typeof matcher === "object") {
+    if (matcher.exists !== undefined && (typeof matcher.exists !== "boolean" || matcher.exists !== exists)) {
+      return false;
+    }
+    if (matcher.and !== undefined) {
+      const items = Array.isArray(matcher.and) ? matcher.and : [matcher.and];
+      return items.every((item) => matchesUserValue(user, item));
+    }
+    if (matcher.or !== undefined) {
+      const items = Array.isArray(matcher.or) ? matcher.or : [matcher.or];
+      return items.some((item) => matchesUserValue(user, item));
+    }
+    if (matcher.not !== undefined) return !matchesUserValue(user, matcher.not);
+    if (matcher.exists !== undefined && matcher.operator === undefined && matcher.value === undefined && matcher.match === undefined) {
+      return true;
+    }
+  }
+
+  if (!identities.length) return matchesCapturedValue(undefined, matcher, false, false);
+  const operator = matcher && typeof matcher === "object" ? matcher.operator : undefined;
+  const isNotEqual = typeof operator === "string" && operator.toLocaleLowerCase() === "!=";
+  const isInlineNotEqual = typeof matcher === "string" && /^\s*!=\s*/.test(matcher);
+  const matchIdentity = (identity: unknown) => matchesCapturedValue(identity, matcher);
+  return (isNotEqual || isInlineNotEqual)
+    ? identities.every(matchIdentity)
+    : identities.some(matchIdentity);
 }
 
 function matchesCapturedOperator(
@@ -1020,6 +1082,27 @@ export class UixBroker {
         if (typedRule.type === "browserid") {
           const expected = typedRule.browser_id ?? typedRule.id ?? typedRule.value;
           result = expected === undefined || expected === BrowserID();
+        } else if (typedRule.type === "user") {
+          if (!Object.prototype.hasOwnProperty.call(typedRule, "match") && !Object.prototype.hasOwnProperty.call(typedRule, "value")) {
+            console.warn("UIX Broker: user rule requires match or value.");
+            result = false;
+          } else {
+            result = matchesUserValue(
+              browserUser(),
+              Object.prototype.hasOwnProperty.call(typedRule, "match") ? typedRule.match : typedRule.value,
+            );
+          }
+        } else if (typedRule.type === "user_is_admin") {
+          const user = browserUser();
+          const adminValue = getCapturedPathValue(user, "is_admin");
+          result = matchesCapturedValue(
+            adminValue.value,
+            Object.prototype.hasOwnProperty.call(typedRule, "match")
+              ? typedRule.match
+              : Object.prototype.hasOwnProperty.call(typedRule, "value") ? typedRule.value : true,
+            false,
+            adminValue.exists,
+          );
         } else if (typedRule.type === "hash") {
           const hashValue = browserHashValue();
           result = matchesCapturedValue(

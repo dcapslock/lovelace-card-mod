@@ -1,3 +1,9 @@
+## [8.3.0-beta.1](https://github.com/Lint-Free-Technology/uix/compare/v8.2.0...v8.3.0-beta.1) (2026-09-09)
+
+### ⭐ New Features
+
+* **broker:** Add typed rules user and user_is_admin ([#599](https://github.com/Lint-Free-Technology/uix/issues/599)) ([e4ff93f](https://github.com/Lint-Free-Technology/uix/commit/e4ff93f04380c25193bfff45cb1409de3fa32758))
+
 [## [8.2.0](https://github.com/Lint-Free-Technology/uix/compare/v8.1.0...v8.2.0) (2026-09-09)
 
 ### ⭐ New Features

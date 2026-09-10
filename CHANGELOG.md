@@ -1,3 +1,10 @@
+## [8.3.0-beta.3](https://github.com/Lint-Free-Technology/uix/compare/v8.3.0-beta.2...v8.3.0-beta.3) (2026-09-10)
+
+### ⭐ New Features
+
+* **broker:** Add `tile-icon` directive to add a tile-icon before/after an interaction anchor ([#601](https://github.com/Lint-Free-Technology/uix/issues/601)) ([7b3e83c](https://github.com/Lint-Free-Technology/uix/commit/7b3e83cf918164e5d20c952f7d4e6cc73cec0b85))
+* **broker:** Add uix styling to `button` directive. Fix underlying element ripply firing. ([286d272](https://github.com/Lint-Free-Technology/uix/commit/286d2726028b5402394c5f4f572459d8f21104e5))
+
 ## [8.3.0-beta.2](https://github.com/Lint-Free-Technology/uix/compare/v8.3.0-beta.1...v8.3.0-beta.2) (2026-09-10)
 
 ### ⭐ New Features

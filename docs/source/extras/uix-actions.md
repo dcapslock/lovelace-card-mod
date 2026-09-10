@@ -1,6 +1,6 @@
 ---
 title: UIX actions
-description: Learn how UIX actions can clear cache, show more-info or toast messages, run JavaScript, and dispatch browser events.
+description: Learn how UIX actions can clear cache, show more-info or toast messages, protect an action with a code, run JavaScript, and dispatch browser events.
 ---
 # UIX actions
 
@@ -181,4 +181,104 @@ tap_action:
       code: |
         console.log("UIX: Custom javascript action executed!");
         hass.callService("light", "turn_off", {}, { entity_id: variables.entity_id });
+```
+
+## `locked_action` - require a code or confirmation before an action
+
+!!! info
+    `locked_action` available in 8.3.0-beta.2
+
+Runs a normal Home Assistant action only after the current user passes the configured lock. It is useful for actions such as restarts, opening gates, or changing a critical setting without needing to wrap the entire card in a Forge lock.
+
+```yaml
+type: button
+name: Restart Home Assistant
+tap_action:
+  action: fire-dom-event
+  uix:
+    action: locked_action
+    data:
+      locks:
+        - code: 1234
+          admins: true
+      locked_action:
+        action: perform-action
+        perform_action: homeassistant.restart
+```
+
+!!! warning
+    `locked_action` is a frontend interaction guard, not an authorization boundary. Anyone who can edit the dashboard or inspect its loaded configuration can see the code and the protected action. Use Home Assistant permissions and server-side controls for access control.
+
+### Configuration reference
+
+| Key | Type | Default | Description |
+| --- | --- | --- | --- |
+| `locked_action` | object | — | **Required.** The Home Assistant action to run after the lock is passed. |
+| `locks` | list | `[]` | Ordered list of lock entries. See [Lock matching](#lock-matching) and [Lock entry keys](#lock-entry-keys). |
+| `permissive` | boolean | `false` | When `true`, users who do not match a lock entry may run the action. |
+| `entity` | string | — | Entity ID supplied to the nested action, for action types that use the card entity. |
+| `code_dialog` | object | — | Labels for the code/passphrase dialog. See [Code dialog](#code-dialog). |
+| `id` | string or number | — | Stable identifier for retry and lockout tracking. Strongly recommended when using `retry_delay` or `max_retries`; use a distinct ID for each protected action. |
+
+`locked_action` accepts any ordinary Home Assistant action object, including `perform-action`, `toggle`, `more-info`, `navigate`, and `fire-dom-event`.
+
+### Lock matching
+
+`locks` is an ordered list. The first matching active entry determines the challenge. If no active entry matches, the first matching `active: false` entry allows the action without a challenge.
+
+| Configuration | Who it matches |
+| --- | --- |
+| `users` list present | Users whose name is in the list. With `admins: true`, all admins also match. |
+| No `users` list | All non-admin users except users in `except`. |
+| No `users` list with `admins: true` | All users except users in `except`. |
+
+`admins` is additive: without it, admins are excluded from an entry unless listed in `users`. When no lock entry matches, `permissive: true` permits the action; with the default `permissive: false`, admins bypass the action guard and non-admins cannot run the action.
+
+### Lock entry keys
+
+| Key | Type | Default | Description |
+| --- | --- | --- | --- |
+| `active` | boolean | `true` | Set to `false` to explicitly allow matching users without a challenge. |
+| `code` | string or number | — | Code to enter. An all-numeric code shows the Home Assistant number pad; other values use a password field. |
+| `pin` | string or number | — | Alias for `code`. |
+| `confirmation` | string, boolean, or object | — | A confirmation after any code. `true` uses Home Assistant's default text; a string supplies custom text; an object may provide `title` and `text`. |
+| `users` | list of strings | — | Usernames this entry applies to. |
+| `admins` | boolean | `false` | Extends the entry to admins. On an entry without `users`, this makes it apply to all users. |
+| `except` | list of strings | — | Usernames exempt from an entry without `users`. |
+| `retry_delay` | number or string | — | Delay after a wrong code before another attempt. Numbers are milliseconds; strings accept units such as `"10s"`. |
+| `max_retries` | number | — | Wrong-code attempts allowed before the extended lockout. |
+| `max_retries_delay` | number or string | `30000` | Lockout duration after `max_retries`. Numbers are milliseconds; strings accept units such as `"30s"` or `"5m"`. |
+
+### Code dialog
+
+Use `code_dialog` to customise the code or passphrase prompt.
+
+| Key | Type | Default | Description |
+| --- | --- | --- | --- |
+| `title` | string | Home Assistant default | Dialog title. |
+| `submit_text` | string | Home Assistant default | Confirm button label. |
+| `cancel_text` | string | Home Assistant default | Cancel button label. |
+
+### Retry tracking
+
+Retry state is retained in the current browser session. Set `id` whenever a retry delay or lockout matters, especially if dashboard configuration can be regenerated by a template or another custom card: an explicit ID survives control recreation. The same ID shares a retry count, so different protected actions should use different IDs.
+
+```yaml
+tap_action:
+  action: fire-dom-event
+  uix:
+    action: locked_action
+    data:
+      id: restart-home-assistant
+      code_dialog:
+        title: Enter administrator PIN
+        submit_text: Restart
+      locks:
+        - code: 1234
+          admins: true
+          max_retries: 3
+          max_retries_delay: 5m
+      locked_action:
+        action: perform-action
+        perform_action: homeassistant.restart
 ```

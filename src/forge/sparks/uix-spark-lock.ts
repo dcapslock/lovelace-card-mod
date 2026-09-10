@@ -3,30 +3,16 @@ import { UixForgeSparkBase } from "./uix-spark-base";
 import { actionHandlerBind } from "./action-handler";
 import { parseDuration } from "../../helpers/common/parse-duration";
 import { LockTargetAdapter, getLockTargetAdapter } from "./lock-target-adapters";
+import {
+  CodeDialogConfig,
+  createLockRetryState,
+  getLockAccessState,
+  LockEntry,
+  LockRetryState,
+  requestLockAccess,
+} from "../../helpers/lock-access";
 
 const LOCK_OVERLAY_ID_ATTR = "data-uix-forge-lock-id";
-
-interface LockEntry {
-  active?: boolean;
-  /** Numeric PIN code (e.g. 1234) – shown with a numpad dialog. */
-  pin?: string | number;
-  /** Text or numeric code – numeric codes use the numpad dialog, text codes use a password-field dialog. */
-  code?: string | number;
-  /** Confirmation: `true` for default HA text, a plain string for custom text, or an object with optional `title` and `text`. */
-  confirmation?: string | boolean | { title?: string; text?: string };
-  /** Usernames this lock applies to. If omitted the lock applies to all non-admin users. */
-  users?: string[];
-  /** When `true` this lock also applies to (or, when no `users` list, exclusively targets) admins. */
-  admins?: boolean;
-  /** Usernames exempt from this lock when no `users` list is set. */
-  except?: string[];
-  /** Milliseconds (or human-readable duration string, e.g. "30s") to wait before another code attempt after a wrong entry. */
-  retry_delay?: string | number;
-  /** Maximum consecutive wrong attempts before the extended delay kicks in. */
-  max_retries?: number;
-  /** Milliseconds (or human-readable duration string, e.g. "30s") to wait after `max_retries` wrong attempts. */
-  max_retries_delay?: string | number;
-}
 
 /** Pixel offsets for the lock icon within the overlay. */
 interface IconPosition {
@@ -34,16 +20,6 @@ interface IconPosition {
   bottom?: string;
   left?: string;
   right?: string;
-}
-
-/** Options forwarded to the HA `showEnterCodeDialog` helper. */
-interface CodeDialogConfig {
-  /** Override the dialog title. When omitted the HA default is used. */
-  title?: string;
-  /** Override the submit button label. When omitted the HA default is used. */
-  submit_text?: string;
-  /** Override the cancel button label. When omitted the HA default is used. */
-  cancel_text?: string;
 }
 
 export class UixForgeSparkLock extends UixForgeSparkBase {
@@ -69,8 +45,7 @@ export class UixForgeSparkLock extends UixForgeSparkBase {
   private _iconElement: (HTMLElement & { icon?: string }) | null = null;
   private _relockTimer: ReturnType<typeof setTimeout> | null = null;
   private _isUnlocked: boolean = false;
-  private _retryCount: number = 0;
-  private _retryUntil: number = 0;
+  private _retryState: LockRetryState = createLockRetryState();
   private readonly _id: string;
   private _targetElement: HTMLElement | null = null;
   private _targetAdapter: LockTargetAdapter | null = null;
@@ -465,13 +440,8 @@ export class UixForgeSparkLock extends UixForgeSparkBase {
    *                           permanently blocked (overlay shown, no unlock path).
    */
   private _shouldShowLock(): boolean {
-    const lock = this._findMatchingLock();
-    if (lock !== null) return lock.active !== false;
-    // No matching entry
-    if (this._permissive) return false;
-    // permissive:false — admins always bypass when no entry explicitly covers them
-    const user = this.controller.forge.hass?.user;
-    return user?.is_admin !== true;
+    const state = getLockAccessState(this._lockAccessConfig(), this.controller.forge.hass?.user);
+    return state.requiresUnlock || state.blocked;
   }
 
   /**
@@ -480,146 +450,26 @@ export class UixForgeSparkLock extends UixForgeSparkBase {
    * `false`, and the user is not an admin.
    */
   private _isBlocked(): boolean {
-    if (this._permissive) return false;
-    if (this._findMatchingLock() !== null) return false;
-    const user = this.controller.forge.hass?.user;
-    return user?.is_admin !== true;
+    return getLockAccessState(this._lockAccessConfig(), this.controller.forge.hass?.user).blocked;
   }
 
-  /**
-   * Returns the first LockEntry that applies to the current user, or `null` if
-   * none matches.
-   *
-   * `admins` is an *additive* flag — it extends the scope of an entry to also
-   * cover admin users.  By default (admins unset / false) admin users are
-   * excluded from every entry and always bypass the lock (unless matched
-   * explicitly via a `users` list).
-   *
-   * Matching rules:
-   *
-   * Case A — `users` list present:
-   *   • Matches if the current user's name is in the list.
-   *   • Also matches if `admins === true` and the current user is an admin.
-   *
-   * Case B — no `users` list:
-   *   • By default admins are excluded; they skip to the next entry.
-   *   • If `admins === true` the entry applies to EVERYONE (admin + non-admin).
-   *   • Non-admins whose name appears in `except` are also skipped.
-   */
-  private _findMatchingLock(): LockEntry | null {
-    const user = this.controller.forge.hass?.user;
-    const userName: string = user?.name ?? "";
-    const isAdmin: boolean = user?.is_admin === true;
-
-    let firstInactiveMatch: LockEntry | null = null;
-
-    for (const lock of this._locks) {
-      const hasUsersList = Array.isArray(lock.users) && lock.users.length > 0;
-      let matches = false;
-
-      if (hasUsersList) {
-        // Case A: explicit user list
-        if (lock.users!.includes(userName)) {
-          matches = true;
-        } else if (isAdmin && lock.admins === true) {
-          // admins: true additionally covers admin users for this entry
-          matches = true;
-        }
-      } else {
-        // Case B: no users list — applies to everyone by default, but admins are
-        // excluded unless admins: true (which makes the entry apply to all users)
-        if (isAdmin && lock.admins !== true) continue;
-        const hasExcept = Array.isArray(lock.except) && lock.except.length > 0;
-        if (hasExcept && lock.except!.includes(userName)) continue;
-        matches = true;
-      }
-
-      if (matches) {
-        if (lock.active !== false) {
-          return lock;
-        } else if (firstInactiveMatch === null) {
-          firstInactiveMatch = lock;
-        }
-      }
-    }
-
-    return firstInactiveMatch;
+  private _lockAccessConfig() {
+    return {
+      locks: this._locks,
+      permissive: this._permissive,
+      code_dialog: this._codeDialog,
+    };
   }
 
   private async _handleUnlockAttempt(overlay: HTMLElement) {
     if (this._isUnlocked) return;
-
-    // Honour retry cooldown
-    if (Date.now() < this._retryUntil) return;
-
-    const lock = this._findMatchingLock();
-
-    // No matching lock: only unlock if permissive
-    if (lock === null) {
-      if (this._permissive) this._unlock(overlay);
-      return;
-    }
-
-    // An explicitly inactive lock means this user should have free access
-    if (lock.active === false) {
-      this._unlock(overlay);
-      return;
-    }
-
-    // Load HA card helpers (provides all dialogs)
-    let helpers: any;
-    try {
-      helpers = await (window as any).loadCardHelpers();
-    } catch {
-      return;
-    }
-
-    // ── Code / PIN check ─────────────────────────────────────────────────────
-    const codeValue = lock.code ?? lock.pin;
-    if (codeValue !== undefined && codeValue !== null && String(codeValue) !== "") {
-      // Numeric codes get the HA numpad dialog; text codes get a password field
-      const isNumeric = /^\d+$/.test(String(codeValue));
-      const entered = await helpers.showEnterCodeDialog(overlay, {
-        codeFormat: isNumeric ? "number" : "text",
-        ...(this._codeDialog.title !== undefined && { title: this._codeDialog.title }),
-        ...(this._codeDialog.submit_text !== undefined && { submitText: this._codeDialog.submit_text }),
-        ...(this._codeDialog.cancel_text !== undefined && { cancelText: this._codeDialog.cancel_text }),
-      }) as string | null;
-
-      if (entered === null) return; // User cancelled
-
-      if (String(entered) !== String(codeValue)) {
-        this._retryCount++;
-
-        // Apply per-attempt or max-retries cooldown
-        if (lock.max_retries !== undefined && this._retryCount >= lock.max_retries) {
-          this._retryUntil = Date.now() + (parseDuration(lock.max_retries_delay) ?? 30000);
-          this._retryCount = 0;
-        } else if (lock.retry_delay) {
-          this._retryUntil = Date.now() + (parseDuration(lock.retry_delay) ?? 0);
-        }
-
-        await helpers.showAlertDialog(overlay, {
-          title: "Wrong code",
-        });
-        return;
-      }
-
-      this._retryCount = 0;
-    }
-
-    // ── Confirmation check ────────────────────────────────────────────────────
-    if (lock.confirmation !== undefined && lock.confirmation !== false) {
-      const conf = lock.confirmation;
-      const confirmed = await helpers.showConfirmationDialog(overlay, {
-        title: typeof conf === "object" ? conf.title : undefined,
-        text: typeof conf === "string" ? conf : typeof conf === "object" ? conf.text : undefined,
-      }) as boolean;
-
-      if (!confirmed) return;
-    }
-
-    this._unlock(overlay);
+    const allowed = await requestLockAccess({
+      config: this._lockAccessConfig(),
+      user: this.controller.forge.hass?.user,
+      anchor: overlay,
+      retryState: this._retryState,
+    });
+    if (allowed) this._unlock(overlay);
   }
 
   /**

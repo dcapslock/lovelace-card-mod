@@ -1,4 +1,41 @@
 import { hass, hass_base_el } from "./helpers/hass";
+import {
+  createLockRetryState,
+  LockRetryState,
+  requestLockAccess,
+} from "./helpers/lock-access";
+
+const lockedActionRetryStates = new Map<string, LockRetryState>();
+const fallbackLockedActionRetryStates = new WeakMap<EventTarget, Map<string, LockRetryState>>();
+
+const lockedActionState = (source: EventTarget, data: Record<string, any>): LockRetryState => {
+  const hasId = data.id != null && data.id !== "";
+  const id = hasId
+    ? String(data.id)
+    : JSON.stringify({ locks: data.locks, permissive: data.permissive, code_dialog: data.code_dialog });
+  if (hasId) {
+    let state = lockedActionRetryStates.get(id);
+    if (!state) {
+      state = createLockRetryState();
+      lockedActionRetryStates.set(id, state);
+    }
+    return state;
+  }
+
+  let states = fallbackLockedActionRetryStates.get(source);
+  if (!states) {
+    states = new Map();
+    fallbackLockedActionRetryStates.set(source, states);
+  }
+  // The fallback keeps ordinary static actions stable for as long as their
+  // source control is retained. An explicit id survives control recreation.
+  let state = states.get(id);
+  if (!state) {
+    state = createLockRetryState();
+    states.set(id, state);
+  }
+  return state;
+};
 
 // Add a listener to execute UIX custom actions via the Home Assistant `fire-dom-event` / `ll-custom` action
 window.addEventListener("uix-bootstrap", async (ev: Event) => {
@@ -16,7 +53,9 @@ window.addEventListener("uix-bootstrap", async (ev: Event) => {
     if (actionName && typeof actionName === "string" && typeof actionList[actionName] === "function") {
       try {
         const data = (uix as any).data ?? {};
-        const result = (actionList as any)[actionName](data, uix);
+        const source = (event.composedPath().find((target) => target instanceof HTMLElement)
+          ?? event.target) as EventTarget;
+        const result = (actionList as any)[actionName](data, uix, source);
         if (result && typeof (result as Promise<unknown>).catch === "function") {
           (result as Promise<unknown>).catch((error: unknown) => {
             console.error(`UIX: Error while executing action "${actionName}":`, error);
@@ -154,6 +193,39 @@ export class Actions {
       console.error("UIX: Error while executing javascript action code:", error);
     }
   }
+  static async locked_action(data: Record<string, any>, _uix: Record<string, any>, source: EventTarget) {
+    if (!data || typeof data !== "object" || !data.locked_action || typeof data.locked_action !== "object") {
+      console.error("UIX: locked_action requires a locked_action object:", data);
+      return;
+    }
+    if (!(source instanceof HTMLElement)) {
+      console.error("UIX: locked_action could not determine an element to show its dialog:", data);
+      return;
+    }
+
+    const hs = await hass();
+    const allowed = await requestLockAccess({
+      config: {
+        locks: Array.isArray(data.locks) ? data.locks : [],
+        permissive: data.permissive === true,
+        code_dialog: data.code_dialog && typeof data.code_dialog === "object" ? data.code_dialog : {},
+      },
+      user: hs?.user,
+      anchor: source,
+      retryState: lockedActionState(source, data),
+    });
+    if (!allowed) return;
+
+    const config: Record<string, any> = {
+      tap_action: { ...data.locked_action },
+    };
+    if (data.entity) config.entity = data.entity;
+    source.dispatchEvent(new CustomEvent("hass-action", {
+      bubbles: true,
+      composed: true,
+      detail: { config, action: "tap" },
+    }));
+  }
 }
 
 const actionList: Record<string, Function> = {
@@ -164,4 +236,5 @@ const actionList: Record<string, Function> = {
   "clear-cache": Actions.clear_cache,
   "more-info": Actions.more_info,
   javascript: Actions.javascript,
+  locked_action: Actions.locked_action,
 };

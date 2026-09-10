@@ -236,14 +236,18 @@ def is_eligible(
     translation: tuple[int, int, int],
     canonical_is_prerelease: bool,
 ) -> bool:
-    """Allow one prior minor for prereleases, otherwise current and prior minors."""
+    """Keep the latest stable release's two-minor window during prereleases."""
 
     canonical_major, canonical_minor, _ = canonical
     translation_major, translation_minor, _ = translation
     latest_allowed_minor = canonical_minor - 1 if canonical_is_prerelease else canonical_minor
+    oldest_allowed_minor = max(
+        0,
+        latest_allowed_minor - 1,
+    )
     return (
         translation_major == canonical_major
-        and canonical_minor - 1 <= translation_minor <= latest_allowed_minor
+        and oldest_allowed_minor <= translation_minor <= latest_allowed_minor
     )
 
 

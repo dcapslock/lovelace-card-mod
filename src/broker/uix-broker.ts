@@ -1423,6 +1423,7 @@ export class UixBroker {
       wrapper.appendChild(style);
 
       const stopPropagation = (event: Event) => event.stopPropagation();
+      wrapper.addEventListener("pointerdown", stopPropagation);
       wrapper.addEventListener("click", stopPropagation);
       wrapper.addEventListener("mousedown", stopPropagation);
       wrapper.addEventListener("touchstart", stopPropagation);
@@ -1449,6 +1450,7 @@ export class UixBroker {
     button.uixBrokerButtonConfig = this.buttonConfig(directive, context, target);
     updateHaButton(button, button.uixBrokerButtonConfig);
     this.applyButtonStyle(button, directive.style, context);
+    await this.applyButtonUix(button, directive, context, button.uixBrokerButtonConfig);
     this.placeButton(wrapper, target, directive.before !== undefined);
     this.refreshRetainedReferenceObservers();
   }
@@ -1590,6 +1592,16 @@ export class UixBroker {
       button.style.setProperty(property, String(value));
       button.uixBrokerStyleProperties.push(property);
     }
+  }
+
+  private async applyButtonUix(
+    button: BrokerButtonElement,
+    directive: UixBrokerDirective,
+    context: BrokerContext,
+    config: UixButtonConfig,
+  ) {
+    const uixConfig = resolveCaptured(directive.uix, context.captured, context.results) as UixConfig | undefined;
+    await apply_uix(button as ModdedElement, "uix-broker-button", uixConfig, { config });
   }
 
   private clearTileIconStyle(tileIcon: BrokerTileIconElement) {

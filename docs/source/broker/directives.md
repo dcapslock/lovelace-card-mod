@@ -192,6 +192,19 @@ Use `style` for a flat mapping of CSS property names and values. The properties 
     "--ha-icon-button-size": 32px
 ```
 
+Use `uix` for UIX styling, including styles inside the button's shadow root. Its UIX type is `uix-broker-button`, and the resolved button settings are available as `config` in UIX templates.
+
+```yaml
+- type: button
+  entity: light.living_room
+  label: Toggle
+  uix:
+    style: |
+      :host {
+        --uix-button-margin: {{ '6px' if is_state(config.entity, 'on') else '0px' }};
+      }
+```
+
 ### Further UIX styling
 
 Use `style` for simple inline properties. For further customisation, use UIX styling — normally through a theme. First create the button, select the generated `ha-button` in your browser's element inspector, then run `uix_path($0)` to generate the appropriate theme variable and selector path.
@@ -221,12 +234,13 @@ uix-sidebar-yaml: |
 | `appearance` | `string` | Home Assistant default | `accent`, `filled`, `outlined`, or `plain`. Icon-only buttons default to `plain`. |
 | `size` | `string` | — | `s` (small) or `m` (medium). |
 | `style` | object | — | Flat map of CSS property names and string or numeric values, set inline on `ha-button`. |
+| `uix` | object | — | UIX configuration applied to the generated button as type `uix-broker-button`. |
 | `tap_action` / `hold_action` / `double_tap_action` | action | — | Home Assistant action to run from the button. |
 
 !!! note
     - Set at most one of `after` and `before`.
     - Button clicks are isolated from the reference element's own action handler.
-    - Ripples from the reference element are not prevented.
+    - Pointer, mouse, touch, and click events stop at the generated button. This prevents a containing element's ripple or action handler from reacting while retaining the button's own action and ripple.
     - The same `--uix-button-margin` CSS variable as the Forge button spark apply. The default margin is `-6px` for a labelled button and `0px` for an icon-only button.
     - Other CSS variables applicable to the Forge button spark also apply.
 

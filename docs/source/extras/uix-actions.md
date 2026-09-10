@@ -185,6 +185,9 @@ tap_action:
 
 ## `locked_action` - require a code or confirmation before an action
 
+!!! info
+    `locked_action` available in 8.3.0-beta.2
+
 Runs a normal Home Assistant action only after the current user passes the configured lock. It is useful for actions such as restarts, opening gates, or changing a critical setting without needing to wrap the entire card in a Forge lock.
 
 ```yaml

@@ -192,7 +192,7 @@ Use `style` for a flat mapping of CSS property names and values. The properties 
     "--ha-icon-button-size": 32px
 ```
 
-Use `uix` for UIX styling, including styles inside the button's shadow root. Its UIX type is `uix-broker-button`, and the resolved button settings are available as `config` in UIX templates.
+Use `uix` for UIX styling, including styles inside the button's shadow root. Its UIX type is `uix-broker-button`; the resolved button settings are available as `config`, and prior `template` or `javascript` directive results are available as `directive` in UIX templates.
 
 !!! info
     `button` UIX styling available in 8.3.0-beta.3
@@ -270,7 +270,7 @@ Use `style` for a flat mapping of CSS property names and values. The properties 
     z-index: 1
 ```
 
-Use `uix` for UIX styling, including styles inside the tile icon's shadow root. Its UIX type is `broker-tile-icon`, and the resolved tile-icon settings are available as `config` in UIX templates.
+Use `uix` for UIX styling, including styles inside the tile icon's shadow root. Its UIX type is `broker-tile-icon`; the resolved tile-icon settings are available as `config`, and prior `template` or `javascript` directive results are available as `directive` in UIX templates.
 
 ```yaml
 - type: tile-icon

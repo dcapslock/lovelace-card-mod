@@ -1601,7 +1601,10 @@ export class UixBroker {
     config: UixButtonConfig,
   ) {
     const uixConfig = resolveCaptured(directive.uix, context.captured, context.results) as UixConfig | undefined;
-    await apply_uix(button as ModdedElement, "uix-broker-button", uixConfig, { config });
+    await apply_uix(button as ModdedElement, "uix-broker-button", uixConfig, {
+      config,
+      directive: context.results,
+    });
   }
 
   private clearTileIconStyle(tileIcon: BrokerTileIconElement) {
@@ -1631,7 +1634,10 @@ export class UixBroker {
     config: UixTileIconConfig,
   ) {
     const uixConfig = resolveCaptured(directive.uix, context.captured, context.results) as UixConfig | undefined;
-    await apply_uix(tileIcon as ModdedElement, "broker-tile-icon", uixConfig, { config });
+    await apply_uix(tileIcon as ModdedElement, "broker-tile-icon", uixConfig, {
+      config,
+      directive: context.results,
+    });
   }
 
   private placeButton(wrapper: HTMLElement, target: Element, before: boolean) {

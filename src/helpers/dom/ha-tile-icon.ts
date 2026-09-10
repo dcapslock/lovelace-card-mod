@@ -32,12 +32,12 @@ export function createHaTileIcon(config: UixTileIconConfig, hass: any, handleAct
 
 export function updateHaTileIcon(tileIcon: HTMLElement, config: UixTileIconConfig, hass: any) {
   const entity = config.entity || "";
-  const tapAction = config.tap_action ?? (entity ? { action: getEntityDefaultTileIconAction(entity) } : undefined);
+  const tapAction = config.tap_action ?? { action: entity ? getEntityDefaultTileIconAction(entity) : "none" };
   const hasActions = !![
     tapAction,
     config.hold_action,
     config.double_tap_action,
-  ].some((action) => action?.action !== "none");
+  ].some((action) => action?.action !== undefined && action.action !== "none");
   const tileIconElement = tileIcon as HTMLElement & Record<string, any>;
   tileIconElement.interactive = hasActions;
   tileIconElement.actionHandlerOptions = hasActions
@@ -81,7 +81,7 @@ export function dispatchHaTileIconAction(tileIcon: HTMLElement, config: UixTileI
   if (!action) return;
   const actionKey = `${action}_action` as keyof UixTileIconConfig;
   const entity = config.entity || "";
-  const tapAction = config.tap_action ?? (entity ? { action: getEntityDefaultTileIconAction(entity) } : undefined);
+  const tapAction = config.tap_action ?? { action: entity ? getEntityDefaultTileIconAction(entity) : "none" };
   const actionConfig: Record<string, any> = { entity };
   if (tapAction) actionConfig.tap_action = tapAction;
   if (config.hold_action) actionConfig.hold_action = config.hold_action;

@@ -194,6 +194,9 @@ Use `style` for a flat mapping of CSS property names and values. The properties 
 
 Use `uix` for UIX styling, including styles inside the button's shadow root. Its UIX type is `uix-broker-button`, and the resolved button settings are available as `config` in UIX templates.
 
+!!! info
+    `button` UIX styling available in 8.3.0-beta.3
+
 ```yaml
 - type: button
   entity: light.living_room
@@ -203,22 +206,6 @@ Use `uix` for UIX styling, including styles inside the button's shadow root. Its
       :host {
         --uix-button-margin: {{ '6px' if is_state(config.entity, 'on') else '0px' }};
       }
-```
-
-### Further UIX styling
-
-Use `style` for simple inline properties. For further customisation, use UIX styling — normally through a theme. First create the button, select the generated `ha-button` in your browser's element inspector, then run `uix_path($0)` to generate the appropriate theme variable and selector path.
-
-Use a theme when you need templates or styles inside a shadow root. See [DOM navigation](../concepts/dom.md) for selector paths and [UIX application](../concepts/application.md) for how UIX styling is applied.
-
-For example, a button inserted into the sidebar can be styled through `uix-sidebar-yaml`:
-
-```yaml
-uix-sidebar-yaml: |
-  .: |
-    div[data-uix-broker-button] ha-button {
-      --uix-button-margin: 6px;
-    }
 ```
 
 | Key | Type | Default | Description |
@@ -245,6 +232,10 @@ uix-sidebar-yaml: |
     - Other CSS variables applicable to the Forge button spark also apply.
 
 ## Tile icon
+
+!!! info
+    `tile-icon` directive available in 8.3.0-beta.3
+
 
 `tile-icon` inserts a Home Assistant `ha-tile-icon` beside the directive anchor. It uses the same icon rendering and action handling as the [Forge tile-icon spark](../forge/sparks/tile-icon.md). The tile icon is inserted after the directive anchor by default.
 

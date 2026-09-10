@@ -12,7 +12,12 @@ const lockedActionState = (source: EventTarget, data: Record<string, any>): Lock
   const hasId = data.id != null && data.id !== "";
   const id = hasId
     ? String(data.id)
-    : JSON.stringify({ locks: data.locks, permissive: data.permissive, code_dialog: data.code_dialog });
+    : JSON.stringify({
+      locks: data.locks,
+      permissive: data.permissive,
+      code_dialog: data.code_dialog,
+      locked_action: data.locked_action,
+    });
   if (hasId) {
     let state = lockedActionRetryStates.get(id);
     if (!state) {

@@ -1,3 +1,9 @@
+## [8.3.0-beta.2](https://github.com/Lint-Free-Technology/uix/compare/v8.3.0-beta.1...v8.3.0-beta.2) (2026-09-10)
+
+### ⭐ New Features
+
+* UIX action `locked_action`. Uses same `locks` and `code_dialog` config of Forge lock spark. ([#600](https://github.com/Lint-Free-Technology/uix/issues/600)) ([8cd595d](https://github.com/Lint-Free-Technology/uix/commit/8cd595d616546730ff61f1f0e760f348a4a96704))
+
 ## [8.3.0-beta.1](https://github.com/Lint-Free-Technology/uix/compare/v8.2.0...v8.3.0-beta.1) (2026-09-09)
 
 ### ⭐ New Features

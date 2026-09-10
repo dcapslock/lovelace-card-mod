@@ -1,9 +1,10 @@
 import { tinykeys } from "tinykeys";
 import { BrowserID } from "../helpers/browser_id";
-import { hass } from "../helpers/hass";
+import { hass, provideHass } from "../helpers/hass";
 import { getPanelState } from "../helpers/panel";
 import { render_template } from "../helpers/templates";
 import { matchesHostElementPath, selectTree } from "../helpers/selecttree";
+import { apply_uix, ModdedElement, UixConfig } from "../helpers/apply_uix";
 import {
   createHaButton,
   dispatchHaButtonAction,
@@ -11,6 +12,11 @@ import {
   UixButtonConfig,
   updateHaButton,
 } from "../helpers/dom/ha-button";
+import {
+  dispatchHaTileIconAction,
+  UixTileIconConfig,
+  updateHaTileIcon,
+} from "../helpers/dom/ha-tile-icon";
 import {
   UixBrokerAnchor,
   UixBrokerConfig,
@@ -42,9 +48,15 @@ const UNSAFE_PROPERTY_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 const BROKER_SELECT_TREE_TIMEOUT_MS = 2_000;
 const BROKER_SELECT_TREE_RETRY_MS = 50;
 const BROKER_BUTTON_WRAPPER_ATTR = "data-uix-broker-button";
+const BROKER_TILE_ICON_ATTR = "data-uix-broker-tile-icon";
 
 type BrokerButtonElement = HTMLElement & {
   uixBrokerButtonConfig?: UixButtonConfig;
+  uixBrokerStyleProperties?: string[];
+};
+
+type BrokerTileIconElement = HTMLElement & {
+  uixBrokerTileIconConfig?: UixTileIconConfig;
   uixBrokerStyleProperties?: string[];
 };
 
@@ -531,6 +543,7 @@ function selectTreeSync(root: ParentNode, path: string): Element | null {
 }
 
 export class UixBroker {
+  private brokerHass: any;
   private interactions: UixBrokerInteraction[] = [];
   private browserListeners = new Map<string, EventListener>();
   private shortcutUnsubscribers: Array<() => void> = [];
@@ -539,11 +552,25 @@ export class UixBroker {
   private anchorHistory: UixBrokerAnchorHistoryEntry[] = [];
   private activeInteractions = new Set<UixBrokerInteraction>();
   private buttonWrappers = new Map<UixBrokerDirective, HTMLElement>();
+  private tileIcons = new Map<UixBrokerDirective, HTMLElement>();
   private retainedReferenceObservers = new Map<Node, MutationObserver>();
   private templateCache = new Map<string, TemplateCacheEntry>();
 
+  get hass() {
+    return this.brokerHass;
+  }
+
+  set hass(value: any) {
+    this.brokerHass = value;
+    this.refreshTileIcons(value);
+  }
+
+  async provideHass() {
+    await provideHass(this);
+  }
+
   configure(config: UixBrokerConfig | UixBrokerInteraction[]) {
-    this.removeButtons();
+    this.removeInsertedElements();
     this.templateCache = new Map();
     this.interactions = asInteractions(config);
     this.configurationVersion += 1;
@@ -855,13 +882,16 @@ export class UixBroker {
 
   /**
    * Broker keeps anchors only for the developer console helper and keeps
-   * button wrappers only to update a previously inserted button. Neither
+   * button wrappers and tile icons only to update previously inserted elements. Neither
    * needs to outlive its DOM subtree.
    */
   private pruneDetachedReferences() {
     this.anchorHistory = this.anchorHistory.filter(({ anchor }) => anchor.isConnected);
     for (const [directive, wrapper] of this.buttonWrappers) {
       if (!wrapper.isConnected) this.buttonWrappers.delete(directive);
+    }
+    for (const [directive, tileIcon] of this.tileIcons) {
+      if (!tileIcon.isConnected) this.tileIcons.delete(directive);
     }
     this.refreshRetainedReferenceObservers();
   }
@@ -873,10 +903,11 @@ export class UixBroker {
    */
   private refreshRetainedReferenceObservers() {
     const roots = new Set<Node>();
-    if (this.anchorHistory.length || this.buttonWrappers.size) {
+    if (this.anchorHistory.length || this.buttonWrappers.size || this.tileIcons.size) {
       roots.add(document);
       this.anchorHistory.forEach(({ anchor }) => roots.add(anchor.getRootNode()));
       this.buttonWrappers.forEach((wrapper) => roots.add(wrapper.getRootNode()));
+      this.tileIcons.forEach((tileIcon) => roots.add(tileIcon.getRootNode()));
     }
 
     this.retainedReferenceObservers.forEach((observer, root) => {
@@ -896,7 +927,7 @@ export class UixBroker {
     directive: UixBrokerDirective,
     interactionAnchor: Element,
   ): Promise<Element | null> {
-    if (directive.type !== "property" && directive.type !== "event" && directive.type !== "call" && directive.type !== "button") {
+    if (directive.type !== "property" && directive.type !== "event" && directive.type !== "call" && directive.type !== "button" && directive.type !== "tile-icon") {
       return interactionAnchor;
     }
     if (directive.type === "event" && directive.target !== undefined && directive.target !== "anchor") {
@@ -1188,6 +1219,13 @@ export class UixBroker {
     event.stopImmediatePropagation();
   }
 
+  private refreshTileIcons(currentHass: any) {
+    this.tileIcons.forEach((tileIcon) => {
+      const config = (tileIcon as BrokerTileIconElement).uixBrokerTileIconConfig;
+      if (config) updateHaTileIcon(tileIcon, config, currentHass);
+    });
+  }
+
   private async executeDirective(directive: UixBrokerDirective, anchor: Element, context: BrokerContext) {
     if (directive.type === "property") {
       this.executeProperty(directive, anchor, context);
@@ -1199,6 +1237,8 @@ export class UixBroker {
       await this.executeAction(directive, anchor, context);
     } else if (directive.type === "button") {
       await this.executeButton(directive, anchor, context);
+    } else if (directive.type === "tile-icon") {
+      await this.executeTileIcon(directive, anchor, context);
     } else if (directive.type === "template") {
       await this.executeTemplate(directive, context);
     } else if (directive.type === "javascript") {
@@ -1413,6 +1453,47 @@ export class UixBroker {
     this.refreshRetainedReferenceObservers();
   }
 
+  private async executeTileIcon(directive: UixBrokerDirective, anchor: Element, context: BrokerContext) {
+    const target = await this.resolveTileIconTarget(directive, anchor);
+    if (!target) return;
+    const parent = target.parentElement || target.parentNode;
+    if (!parent) return;
+
+    let tileIcon = this.tileIcons.get(directive);
+    if (tileIcon && (!tileIcon.isConnected || tileIcon.parentNode !== parent)) {
+      tileIcon.remove();
+      this.tileIcons.delete(directive);
+      tileIcon = undefined;
+    }
+
+    if (!tileIcon) {
+      tileIcon = document.createElement("ha-tile-icon");
+      tileIcon.setAttribute(BROKER_TILE_ICON_ATTR, "");
+      const slot = target.getAttribute("slot");
+      if (slot) tileIcon.setAttribute("slot", slot);
+      this.tileIcons.set(directive, tileIcon);
+      tileIcon.addEventListener("action", (event) => {
+        const icon = tileIcon as BrokerTileIconElement;
+        dispatchHaTileIconAction(icon, icon.uixBrokerTileIconConfig ?? {}, event as CustomEvent);
+      });
+      const stopPropagation = (event: Event) => event.stopPropagation();
+      tileIcon.addEventListener("pointerdown", stopPropagation);
+      tileIcon.addEventListener("mousedown", stopPropagation);
+      tileIcon.addEventListener("touchstart", stopPropagation);
+      tileIcon.addEventListener("click", stopPropagation);
+    }
+
+    const config = this.tileIconConfig(directive, context, target);
+    const brokerTileIcon = tileIcon as BrokerTileIconElement;
+    this.clearTileIconStyle(brokerTileIcon);
+    brokerTileIcon.uixBrokerTileIconConfig = config;
+    updateHaTileIcon(tileIcon, config, await hass());
+    this.applyTileIconStyle(brokerTileIcon, directive.style, context);
+    await this.applyTileIconUix(brokerTileIcon, directive, context, config);
+    this.placeTileIcon(tileIcon, target, directive.before !== undefined);
+    this.refreshRetainedReferenceObservers();
+  }
+
   private async resolveButtonTarget(directive: UixBrokerDirective, anchor: Element): Promise<Element | null> {
     if (directive.after !== undefined && directive.before !== undefined) {
       throw new Error("button directive accepts either after or before, not both");
@@ -1421,6 +1502,18 @@ export class UixBroker {
     if (path === undefined) return anchor;
     if (typeof path !== "string" || !path.trim()) {
       throw new Error("button directive after or before must be a non-empty path relative to the directive anchor");
+    }
+    return this.waitForSelectTreeAnchor(path, anchor);
+  }
+
+  private async resolveTileIconTarget(directive: UixBrokerDirective, anchor: Element): Promise<Element | null> {
+    if (directive.after !== undefined && directive.before !== undefined) {
+      throw new Error("tile-icon directive accepts either after or before, not both");
+    }
+    const path = directive.after ?? directive.before;
+    if (path === undefined) return anchor;
+    if (typeof path !== "string" || !path.trim()) {
+      throw new Error("tile-icon directive after or before must be a non-empty path relative to the directive anchor");
     }
     return this.waitForSelectTreeAnchor(path, anchor);
   }
@@ -1448,7 +1541,29 @@ export class UixBroker {
     return config;
   }
 
-  private setEventActionAnchor(config: UixButtonConfig, anchor: Element) {
+  private tileIconConfig(
+    directive: UixBrokerDirective,
+    context: BrokerContext,
+    anchor: Element,
+  ): UixTileIconConfig {
+    const config = resolveCaptured({
+      entity: directive.entity,
+      icon: directive.icon,
+      color: directive.color,
+      icon_path: directive.icon_path,
+      image_url: directive.image_url,
+      tap_action: directive.tap_action,
+      hold_action: directive.hold_action,
+      double_tap_action: directive.double_tap_action,
+    }, context.captured, context.results) as UixTileIconConfig;
+    this.setEventActionAnchor(config, anchor);
+    return config;
+  }
+
+  private setEventActionAnchor(
+    config: Pick<UixButtonConfig & UixTileIconConfig, "tap_action" | "hold_action" | "double_tap_action">,
+    anchor: Element,
+  ) {
     for (const actionKey of ["tap_action", "hold_action", "double_tap_action"] as const) {
       const action = config[actionKey];
       if (action?.action !== "fire-dom-event") continue;
@@ -1477,6 +1592,36 @@ export class UixBroker {
     }
   }
 
+  private clearTileIconStyle(tileIcon: BrokerTileIconElement) {
+    tileIcon.uixBrokerStyleProperties?.forEach((property) => tileIcon.style.removeProperty(property));
+    tileIcon.uixBrokerStyleProperties = [];
+  }
+
+  private applyTileIconStyle(tileIcon: BrokerTileIconElement, style: unknown, context: BrokerContext) {
+    if (style === undefined) return;
+    const resolvedStyle = resolveCaptured(style, context.captured, context.results);
+    if (!resolvedStyle || typeof resolvedStyle !== "object" || Array.isArray(resolvedStyle)) {
+      throw new Error("tile-icon directive style must be an object of CSS property names and values");
+    }
+    for (const [property, value] of Object.entries(resolvedStyle)) {
+      if (!property.trim() || (typeof value !== "string" && typeof value !== "number")) {
+        throw new Error("tile-icon directive style values must be strings or numbers");
+      }
+      tileIcon.style.setProperty(property, String(value));
+      tileIcon.uixBrokerStyleProperties.push(property);
+    }
+  }
+
+  private async applyTileIconUix(
+    tileIcon: BrokerTileIconElement,
+    directive: UixBrokerDirective,
+    context: BrokerContext,
+    config: UixTileIconConfig,
+  ) {
+    const uixConfig = resolveCaptured(directive.uix, context.captured, context.results) as UixConfig | undefined;
+    await apply_uix(tileIcon as ModdedElement, "broker-tile-icon", uixConfig, { config });
+  }
+
   private placeButton(wrapper: HTMLElement, target: Element, before: boolean) {
     const parent = target.parentNode;
     if (!parent) return;
@@ -1488,9 +1633,22 @@ export class UixBroker {
     if (nextSibling !== wrapper) parent.insertBefore(wrapper, nextSibling);
   }
 
-  private removeButtons() {
+  private placeTileIcon(tileIcon: HTMLElement, target: Element, before: boolean) {
+    const parent = target.parentNode;
+    if (!parent) return;
+    if (before) {
+      if (tileIcon.nextSibling !== target) parent.insertBefore(tileIcon, target);
+      return;
+    }
+    const nextSibling = target.nextSibling;
+    if (nextSibling !== tileIcon) parent.insertBefore(tileIcon, nextSibling);
+  }
+
+  private removeInsertedElements() {
     this.buttonWrappers.forEach((wrapper) => wrapper.remove());
     this.buttonWrappers.clear();
+    this.tileIcons.forEach((tileIcon) => tileIcon.remove());
+    this.tileIcons.clear();
     this.refreshRetainedReferenceObservers();
   }
 }
@@ -1499,6 +1657,7 @@ window.addEventListener("uix-bootstrap", (event: Event) => {
   event.stopPropagation();
   const broker = new UixBroker();
   (window as any).uixBroker = broker;
+  void broker.provideHass();
   window.addEventListener("uix-broker-updated", (update: Event) => {
     broker.configure((update as CustomEvent).detail?.uix_broker ?? []);
   });

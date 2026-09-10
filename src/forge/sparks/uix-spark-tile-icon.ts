@@ -1,23 +1,15 @@
 import { PropertyValues } from "lit";
 import { UixForgeSparkBase } from "./uix-spark-base";
-import { computeDomain } from "../../helpers/common/entity/compute_domain";
-import { stateActive } from "../../helpers/common/entity/state_active";
-import { computeCssColor } from "../../helpers/common/entity/compute_color";
-import { stateColorCss } from "../../helpers/common/entity/state_color";
-import { hsv2rgb, rgb2hex, rgb2hsv } from "../../helpers/common/color/convert_color";
-import { DOMAINS_TOGGLE } from "../../helpers/common/const";
-import memoizeOne from 'memoize-one';
+import {
+  createHaTileIcon,
+  dispatchHaTileIconAction,
+  getEntityDefaultTileIconAction,
+  updateHaTileIcon,
+} from "../../helpers/dom/ha-tile-icon";
 
 const TILE_ICON_ID_ATTR = "data-uix-forge-tile-icon-id";
 
-export const getEntityDefaultTileIconAction = (entityId: string) => {
-  const domain = computeDomain(entityId);
-  const supportsIconAction =
-    DOMAINS_TOGGLE.has(domain) ||
-    ["button", "input_button", "scene"].includes(domain);
-
-  return supportsIconAction ? "toggle" : "none";
-};
+export { getEntityDefaultTileIconAction };
 
 export class UixForgeSparkTileIcon extends UixForgeSparkBase {
   type = "tile-icon";
@@ -111,7 +103,9 @@ export class UixForgeSparkTileIcon extends UixForgeSparkBase {
 
     let tileIconEl = existingInParent as any;
     if (!tileIconEl) {
-      tileIconEl = document.createElement("ha-tile-icon") as any;
+      tileIconEl = createHaTileIcon(this.tileIconConfig(), this.controller.forge.hass, (event) => {
+        dispatchHaTileIconAction(tileIconEl, this.tileIconConfig(), event);
+      }) as any;
       tileIconEl.setAttribute(TILE_ICON_ID_ATTR, this._id);
 
       if (element.getAttribute("slot")) {
@@ -129,9 +123,6 @@ export class UixForgeSparkTileIcon extends UixForgeSparkBase {
         parent.insertBefore(tileIconEl, element);
       }
 
-      tileIconEl.addEventListener("action", (ev: CustomEvent) => {
-        this._handleAction(ev, tileIconEl);
-      });
     }
 
     this._updateElement(tileIconEl);
@@ -139,117 +130,19 @@ export class UixForgeSparkTileIcon extends UixForgeSparkBase {
   }
 
   private _updateElement(tileIconEl: any) {
-    const hasActions = !!(( this.tapAction && this.tapAction.action !== "none") || 
-                            (this.holdAction && this.holdAction.action !== "none") || 
-                            (this.doubleTapAction && this.doubleTapAction.action !== "none"));
-    tileIconEl.interactive = hasActions;
-
-    if (hasActions) {
-      tileIconEl.actionHandlerOptions = {
-        hasHold: !!(this.holdAction && this.holdAction.action !== "none"),
-        hasDoubleClick: !!(this.doubleTapAction && this.doubleTapAction.action !== "none"),
-      };
-    }
-
-    const existingStateIcon = tileIconEl.querySelector(':scope > ha-state-icon[slot="icon"]');
-
-    if (this.entity) {
-      let stateIconEl = existingStateIcon as any;
-      if (!stateIconEl) {
-        stateIconEl = document.createElement("ha-state-icon");
-        stateIconEl.setAttribute("slot", "icon");
-        tileIconEl.appendChild(stateIconEl);
-      }
-      const hass = this.controller.forge.hass;
-      if (hass?.states?.[this.entity]) {
-        stateIconEl.stateObj = hass.states[this.entity];
-        stateIconEl.hass = hass;
-        const color = this._computeStateColor(stateIconEl.stateObj, this.color);
-        if (color) {
-          tileIconEl.style.setProperty("--tile-icon-color", color);
-        }
-        if (this.icon) {
-          stateIconEl.icon = this.icon;
-        } else {
-          stateIconEl.icon = undefined;
-        }
-      }
-      tileIconEl.icon = undefined;
-      tileIconEl.iconPath = undefined;
-      tileIconEl.imageUrl = undefined;
-    } else {
-      if (existingStateIcon) {
-        existingStateIcon.remove();
-      }
-      tileIconEl.imageUrl = this.imageUrl || undefined;
-      tileIconEl.iconPath = this.iconPath || undefined;
-      tileIconEl.icon = this.icon || undefined;
-      if (this.color) {
-        tileIconEl.style.setProperty("--tile-icon-color", this.color);
-      } else {
-        tileIconEl.style.removeProperty("--tile-icon-color");
-      }
-    }
+    updateHaTileIcon(tileIconEl, this.tileIconConfig(), this.controller.forge.hass);
   }
 
-  private _handleAction(ev: CustomEvent, tileIconEl: any) {
-    const action = (ev.detail as any)?.action as string;
-    if (!action) return;
-
-    const actionKey = `${action}_action`;
-    const config: Record<string, any> = {};
-    config.entity = this.entity;
-    if (this.tapAction) config.tap_action = this.tapAction;
-    if (this.holdAction) config.hold_action = this.holdAction;
-    if (this.doubleTapAction) config.double_tap_action = this.doubleTapAction;
-
-    if (!config[actionKey]) return;
-
-    tileIconEl.dispatchEvent(
-      new CustomEvent("hass-action", {
-        bubbles: true,
-        composed: true,
-        detail: { config, action },
-      })
-    );
+  private tileIconConfig() {
+    return {
+      entity: this.entity,
+      icon: this.icon,
+      color: this.color,
+      icon_path: this.iconPath,
+      image_url: this.imageUrl,
+      tap_action: this.tapAction ?? undefined,
+      hold_action: this.holdAction ?? undefined,
+      double_tap_action: this.doubleTapAction ?? undefined,
+    };
   }
-
-  private _computeStateColor = memoizeOne(
-    (entity: any, color?: string) => {
-      // Use custom color if active
-      if (color) {
-        return stateActive(entity) ? computeCssColor(color) : undefined;
-      }
-
-      // Use default color for person/device_tracker because color is on the badge
-      if (
-        computeDomain(entity.entity_id) === "person" ||
-        computeDomain(entity.entity_id) === "device_tracker"
-      ) {
-        return undefined;
-      }
-
-      // Use light color if the light support rgb
-      if (
-        computeDomain(entity.entity_id) === "light" &&
-        entity.attributes.rgb_color
-      ) {
-        const hsvColor = rgb2hsv(entity.attributes.rgb_color);
-
-        // Modify the real rgb color for better contrast
-        if (hsvColor[1] < 0.4) {
-          // Special case for very light color (e.g: white)
-          if (hsvColor[1] < 0.1) {
-            hsvColor[2] = 225;
-          } else {
-            hsvColor[1] = 0.4;
-          }
-        }
-        return rgb2hex(hsv2rgb(hsvColor));
-      }
-
-      // Fallback to state color
-      return stateColorCss(entity);
-    }
-  );
 }

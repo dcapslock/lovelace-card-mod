@@ -11,6 +11,7 @@ Directives run one at a time after every interaction rule matches. Each directiv
 - [Event](#event) — dispatch a `CustomEvent`.
 - [Call](#call) — invoke an element method.
 - [Button](#button) — insert an interactive Home Assistant button.
+- [Tile icon](#tile-icon) — insert an interactive Home Assistant tile icon.
 - [Action](#action) — run a Home Assistant, frontend, or UIX action.
 - [Template](#template) — render a Jinja2 template once and save its result.
 - [JavaScript](#javascript) — synchronously evaluate JavaScript and save its return value.
@@ -18,7 +19,7 @@ Directives run one at a time after every interaction rule matches. Each directiv
 
 ## Directive rules
 
-Add `rules` to any directive except `block` to condition just that directive. The syntax is the same as [interaction rules](./rules.md). For `property`, `event`, `call`, and `button`, host-element rules inspect the resolved directive anchor by default. For `action` and `wait`, they inspect the interaction anchor. A rule's own `anchor` remains relative to that default anchor, or can be absolute as usual.
+Add `rules` to any directive except `block` to condition just that directive. The syntax is the same as [interaction rules](./rules.md). For `property`, `event`, `call`, `button`, and `tile-icon`, host-element rules inspect the resolved directive anchor by default. For `action` and `wait`, they inspect the interaction anchor. A rule's own `anchor` remains relative to that default anchor, or can be absolute as usual.
 
 ```yaml
 directives:
@@ -49,7 +50,7 @@ It is available only in `browser` and `shortcut` realms. The interaction anchor 
 
 ## Directive anchors
 
-`property`, `event`, `call`, and `button` directives use the interaction anchor by default. Each can override that default with its own `anchor` configuration. A bare string is relative to the interaction anchor, a string beginning with `&` is a compact absolute document-root `select_tree` path, and `{ select_tree: ... }` is the equivalent long absolute form.
+`property`, `event`, `call`, `button`, and `tile-icon` directives use the interaction anchor by default. Each can override that default with its own `anchor` configuration. A bare string is relative to the interaction anchor, a string beginning with `&` is a compact absolute document-root `select_tree` path, and `{ select_tree: ... }` is the equivalent long absolute form.
 
 ```yaml
 directives:
@@ -228,6 +229,73 @@ uix-sidebar-yaml: |
     - Ripples from the reference element are not prevented.
     - The same `--uix-button-margin` CSS variable as the Forge button spark apply. The default margin is `-6px` for a labelled button and `0px` for an icon-only button.
     - Other CSS variables applicable to the Forge button spark also apply.
+
+## Tile icon
+
+`tile-icon` inserts a Home Assistant `ha-tile-icon` beside the directive anchor. It uses the same icon rendering and action handling as the [Forge tile-icon spark](../forge/sparks/tile-icon.md). The tile icon is inserted after the directive anchor by default.
+
+Use `after` or `before` to select a different reference element. These paths are relative to the resolved directive anchor and support the usual UIX `select_tree` syntax. The tile icon is inserted as a sibling of the matched reference element.
+
+```yaml
+- type: tile-icon
+  entity: light.living_room
+  tap_action:
+    action: toggle
+```
+
+```yaml
+- type: tile-icon
+  anchor: "$ ha-dialog"
+  before: "div.header"
+  entity: light.living_room
+  icon: mdi:star
+  color: orange
+  tap_action:
+    action: more-info
+```
+
+Use `style` for a flat mapping of CSS property names and values. The properties are set inline on the generated `ha-tile-icon`, which is useful for positioning and sizing the icon where dashboard styling cannot reach it.
+
+```yaml
+- type: tile-icon
+  entity: light.living_room
+  style:
+    margin-inline-start: 8px
+    "--tile-icon-size": 28px
+    z-index: 1
+```
+
+Use `uix` for UIX styling, including styles inside the tile icon's shadow root. Its UIX type is `broker-tile-icon`, and the resolved tile-icon settings are available as `config` in UIX templates.
+
+```yaml
+- type: tile-icon
+  entity: light.living_room
+  uix:
+    style: |
+      :host {
+        --tile-icon-size: {{ '32px' if is_state(config.entity, 'on') else '24px' }};
+      }
+```
+
+| Key | Type | Default | Description |
+| --- | --- | --- | --- |
+| `after` | `string` | directive anchor | Relative selector for the reference element. The tile icon is inserted after it. |
+| `before` | `string` | — | Relative selector for the reference element. The tile icon is inserted before it. |
+| `entity` | `string` | — | Entity whose state icon is rendered. It supplies the default tap action: `toggle` for toggleable entities, otherwise `none`. |
+| `icon` | `string` | — | MDI icon. With `entity`, it overrides the entity's normal state icon. |
+| `icon_path` | `string` | — | SVG path passed to `ha-tile-icon` as `iconPath`. |
+| `image_url` | `string` | — | Image URL passed to `ha-tile-icon` as `imageUrl`. |
+| `color` | CSS color | — | Tile icon colour. With `entity`, this is applied while the entity is active. |
+| `style` | object | — | Flat map of CSS property names and string or numeric values, set inline on `ha-tile-icon`. |
+| `uix` | object | — | UIX configuration applied to the generated tile icon as type `broker-tile-icon`. |
+| `tap_action` / `hold_action` / `double_tap_action` | action | — | Home Assistant action to run from the tile icon. |
+
+!!! note
+    - Set at most one of `after` and `before`.
+    - Supply an icon source with `icon`, `icon_path`, `image_url`, or `entity`.
+    - Entity-based tile icons update when Home Assistant state updates.
+    - Pointer, mouse, touch, and click events stop at the generated icon. This prevents a containing element's ripple or action handler from reacting while retaining the tile icon's own action and ripple.
+    - Broker adds the `data-uix-broker-tile-icon` attribute to each generated tile icon, so it can be selected from UIX styling.
 
 ## Action
 

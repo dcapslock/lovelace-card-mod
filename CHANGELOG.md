@@ -1,3 +1,9 @@
+## [8.3.0-beta.4](https://github.com/Lint-Free-Technology/uix/compare/v8.3.0-beta.3...v8.3.0-beta.4) (2026-09-10)
+
+### ⭐ New Features
+
+* **broker:** Pass prior directive results via `directive` to UIX styling to use in templates ad `directive.id...` ([1ee158d](https://github.com/Lint-Free-Technology/uix/commit/1ee158d9fbbb23ddfe37b3b169fe995561d6aada))
+
 ## [8.3.0-beta.3](https://github.com/Lint-Free-Technology/uix/compare/v8.3.0-beta.2...v8.3.0-beta.3) (2026-09-10)
 
 ### ⭐ New Features

@@ -1,5 +1,10 @@
 import { PropertyValues } from "lit";
-import { stopTooltipHidePropagation, UIX_TOOLTIP_CSS } from "../../helpers/dom/ha-tooltip";
+import {
+  stopTooltipHidePropagation,
+  UIX_TOOLTIP_CONTENT_ATTR,
+  UIX_TOOLTIP_CSS,
+  UIX_TOOLTIP_STYLE_ATTR,
+} from "../../helpers/dom/ha-tooltip";
 import { UixForgeSparkBase } from "./uix-spark-base";
 
 export class UixForgeSparkTooltip extends UixForgeSparkBase {
@@ -91,17 +96,23 @@ export class UixForgeSparkTooltip extends UixForgeSparkBase {
     }
 
     // Update content in-place
-    let content = tooltip.querySelector("div");
+    let content = Array.from(tooltip.children as HTMLCollectionOf<Element>).find((child) =>
+      child.hasAttribute(UIX_TOOLTIP_CONTENT_ATTR)
+    ) as HTMLDivElement | undefined;
     if (!content) {
       content = document.createElement("div");
+      content.setAttribute(UIX_TOOLTIP_CONTENT_ATTR, "");
       tooltip.appendChild(content);
     }
     content.innerHTML = this.content;
 
     // Update styles in-place
-    let style = tooltip.querySelector("style");
+    let style = Array.from(tooltip.children as HTMLCollectionOf<Element>).find((child) =>
+      child instanceof HTMLStyleElement && child.hasAttribute(UIX_TOOLTIP_STYLE_ATTR)
+    ) as HTMLStyleElement | undefined;
     if (!style) {
       style = document.createElement("style");
+      style.setAttribute(UIX_TOOLTIP_STYLE_ATTR, "");
       tooltip.appendChild(style);
     }
     style.textContent = UIX_TOOLTIP_CSS;

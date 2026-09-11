@@ -1,4 +1,7 @@
 /** Shared UIX tooltip styling for Home Assistant's wa-tooltip component. */
+export const UIX_TOOLTIP_CONTENT_ATTR = "data-uix-tooltip-content";
+export const UIX_TOOLTIP_STYLE_ATTR = "data-uix-tooltip-style";
+
 export const UIX_TOOLTIP_CSS = `
   wa-tooltip {
     --wa-tooltip-background-color: var(--uix-tooltip-background-color, var(--secondary-background-color));

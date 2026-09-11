@@ -305,7 +305,7 @@ Use `uix` for UIX styling, including styles inside the tile icon's shadow root. 
 
 ## Tooltip
 
-`tooltip` attaches a Home Assistant `wa-tooltip` beside the selected target. Its options and CSS variables match the [Forge tooltip spark](../forge/sparks/tooltip.md). By default, `for` is the resolved directive anchor; a selector is relative to that anchor and uses the normal UIX `select_tree` syntax.
+`tooltip` attaches a Home Assistant `wa-tooltip` beside the selected target. Its options and CSS variables match the [Forge tooltip spark](../forge/sparks/tooltip.md). By default, `for` is the resolved directive anchor; a selector is relative to that anchor and uses the normal UIX `select_tree` syntax. The target must resolve to an element, not a terminal shadow root.
 
 ```yaml
 - type: tooltip

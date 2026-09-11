@@ -135,25 +135,34 @@ element:
 
 ### CSS variables reference
 
+!!! info
+    The following CSS var defaults were updated in 8.3.0.
+
+    - `--uix-tooltip-background-color` (default now `var(--ha-color-surface-default)`)
+    - `--uix-tooltip-font-size` (default now `--ha-font-size-m`)
+    - `--uix-tooltip-padding` (updated token size default resolving to same 8px)
+    - `--uix-tooltip-border-radius` (default now `--ha-border-radius-md`)
+    - `--uix-tooltip-box-shadow` (now uses `--ha-tooltip-box-shadow` and defaults to `var(--ha-box-shadow-m)`)
+
 | CSS variable | Default | Description |
 | ------------ | ------- | ----------- |
-| `--uix-tooltip-background-color` | `--secondary-background-color` | Tooltip background colour. |
-| `--uix-tooltip-content-color` | `--primary-text-color` | Tooltip text colour. |
+| `--uix-tooltip-background-color` | `var(--ha-tooltip-background-color, var(--ha-color-surface-default))` | Tooltip background color. |
+| `--uix-tooltip-content-color` | `--primary-text-color` | Tooltip text color. |
 | `--uix-tooltip-font-family` | `--ha-font-family-body` | Font family. |
-| `--uix-tooltip-font-size` | `--ha-font-size-s` | Font size. |
-| `--uix-tooltip-font-weight` | `--ha-font-weight-normal` | Font weight. |
+| `--uix-tooltip-font-size` | `--ha-font-size-m` | Font size. |
+| `--uix-tooltip-font-weight` | `--ha-font-weight-medium` | Font weight. |
 | `--uix-tooltip-line-height` | `--ha-line-height-condensed` | Line height. |
-| `--uix-tooltip-padding` | `8px` | Padding inside the tooltip. |
-| `--uix-tooltip-border-radius` | `--ha-border-radius-sm` | Border radius. |
-| `--uix-tooltip-arrow-size` | `8px` | Size of the directional arrow. |
+| `--uix-tooltip-padding` | `var(--ha-tooltip-padding, var(--ha-space-2))` | Padding inside the tooltip. |
+| `--uix-tooltip-border-radius` | `--ha-border-radius-md` | Border radius. |
+| `--uix-tooltip-arrow-size` | `var(--ha-tooltip-arrow-size, 8px)` | Size of the directional arrow. If you want to have no arrow either set `without_arrow: true` in tooltip config, or style `--ha-tooltip-arrow-size: 0px` or `--uix-tooltip-arrow-size: 0px` |
 | `--uix-tooltip-border-width` | — | Border width (unset by default). |
-| `--uix-tooltip-border-color` | — | Border colour (unset by default). |
+| `--uix-tooltip-border-color` | — | Border color (unset by default). |
 | `--uix-tooltip-border-style` | — | Border style (unset by default). |
 | `--uix-tooltip-max-width` | `30ch` | Maximum width of the tooltip. |
 | `--uix-tooltip-show-duration` | `100ms` | Duration of the show animation. |
 | `--uix-tooltip-hide-duration` | `100ms` | Duration of the hide animation. |
 | `--uix-tooltip-opacity` | `1` | Tooltip opacity. |
-| `--uix-tooltip-box-shadow` | `--ha-card-box-shadow` | Box shadow. |
+| `--uix-tooltip-box-shadow` | `var(--ha-tooltip-box-shadow, var(--ha-box-shadow-m))` | Box shadow. |
 | `--uix-tooltip-text-align` | `center` | Text alignment. |
 | `--uix-tooltip-text-decoration` | `none` | Text decoration. |
 | `--uix-tooltip-text-transform` | `none` | Text transform. |

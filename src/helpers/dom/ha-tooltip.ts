@@ -4,25 +4,25 @@ export const UIX_TOOLTIP_STYLE_ATTR = "data-uix-tooltip-style";
 
 export const UIX_TOOLTIP_CSS = `
   wa-tooltip {
-    --wa-tooltip-background-color: var(--uix-tooltip-background-color, var(--secondary-background-color));
+    --wa-tooltip-background-color: var(--uix-tooltip-background-color, var(--ha-tooltip-background-color, var(--ha-color-surface-default)));
     --wa-tooltip-content-color: var(--uix-tooltip-content-color, var(--primary-text-color));
     --wa-tooltip-font-family: var(
       --uix-tooltip-font-family,
       var(--ha-tooltip-font-family, var(--ha-font-family-body))
     );
-    --wa-tooltip-font-size: var(--uix-tooltip-font-size, var(--ha-tooltip-font-size, var(--ha-font-size-s)));
+    --wa-tooltip-font-size: var(--uix-tooltip-font-size, var(--ha-tooltip-font-size, var(--ha-font-size-m)));
     --wa-tooltip-font-weight: var(
       --uix-tooltip-font-weight,
-      var(--ha-tooltip-font-weight, var(--ha-font-weight-normal))
+      var(--ha-tooltip-font-weight, var(--ha-font-weight-medium))
     );
     --wa-tooltip-line-height: var(
       --uix-tooltip-line-height,
       var(--ha-tooltip-line-height, var(--ha-line-height-condensed))
     );
-    --wa-tooltip-padding: var(--uix-tooltip-padding, 8px);
+    --wa-tooltip-padding: var(--uix-tooltip-padding, var(--ha-tooltip-padding, var(--ha-space-2)));
     --wa-tooltip-border-radius: var(
       --uix-tooltip-border-radius,
-      var(--ha-tooltip-border-radius, var(--ha-border-radius-sm))
+      var(--ha-tooltip-border-radius, var(--ha-border-radius-md))
     );
     --wa-tooltip-arrow-size: var(--uix-tooltip-arrow-size, var(--ha-tooltip-arrow-size, 8px));
     --wa-tooltip-border-width: var(--uix-tooltip-border-width, 0px);
@@ -37,8 +37,8 @@ export const UIX_TOOLTIP_CSS = `
   }
   wa-tooltip::part(body) {
     padding: var(--uix-tooltip-padding, 0.25em 0.5em);
-    box-shadow: var(--uix-tooltip-box-shadow, var(--ha-card-box-shadow, none));
-    font-weight: var(--uix-tooltip-font-weight, var(--ha-tooltip-font-weight, normal));
+    box-shadow: var(--uix-tooltip-box-shadow, var(--ha-tooltip-box-shadow, var(--ha-box-shadow-m)));
+    font-weight: var(--uix-tooltip-font-weight, var(--ha-tooltip-font-weight, medium));
     font-family: var(--uix-tooltip-font-family, var(--ha-tooltip-font-family, inherit));
     text-align: var(--uix-tooltip-text-align, center);
     text-decoration: var(--uix-tooltip-text-decoration, none);

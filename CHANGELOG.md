@@ -1,3 +1,9 @@
+## [8.3.0-beta.7](https://github.com/Lint-Free-Technology/uix/compare/v8.3.0-beta.6...v8.3.0-beta.7) (2026-09-11)
+
+### ⚙️ Miscellaneous
+
+* **tooltip:** Add `--ha-tooltip-text-color` to `--uix-tooltip-content-color` default chain. ([28b432a](https://github.com/Lint-Free-Technology/uix/commit/28b432a45ca229e04cbc4e44f05d2d3f75a1014a))
+
 ## [8.3.0-beta.6](https://github.com/Lint-Free-Technology/uix/compare/v8.3.0-beta.5...v8.3.0-beta.6) (2026-09-11)
 
 ### ⚙️ Miscellaneous

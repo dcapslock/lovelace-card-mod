@@ -103,10 +103,10 @@ export type UixBrokerRule =
 export type UixBrokerEventTarget = "anchor" | "window" | "document";
 
 export type UixBrokerDirective = {
-  type: "block" | "action" | "property" | "event" | "call" | "button" | "tile-icon" | "template" | "javascript" | "wait";
+  type: "block" | "action" | "property" | "event" | "call" | "button" | "tile-icon" | "tooltip" | "template" | "javascript" | "wait";
   /** Optional conditions that must all match before this directive runs. Not supported by block. */
   rules?: UixBrokerRule[];
-  /** Optional select_tree target for property, event, call, button, and tile-icon directives. */
+  /** Optional select_tree target for property, event, call, button, tile-icon, and tooltip directives. */
   anchor?: UixBrokerSelectTreeAnchor;
   /** Event dispatch target. Applies only to event directives and defaults to anchor. */
   target?: UixBrokerEventTarget;

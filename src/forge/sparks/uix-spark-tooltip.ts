@@ -1,4 +1,5 @@
 import { PropertyValues } from "lit";
+import { stopTooltipHidePropagation, UIX_TOOLTIP_CSS } from "../../helpers/dom/ha-tooltip";
 import { UixForgeSparkBase } from "./uix-spark-base";
 
 export class UixForgeSparkTooltip extends UixForgeSparkBase {
@@ -82,6 +83,7 @@ export class UixForgeSparkTooltip extends UixForgeSparkBase {
       tooltip = document.createElement("wa-tooltip");
       tooltip.for = element.id;
       tooltip.style.setProperty("display", "contents");
+      stopTooltipHidePropagation(tooltip);
       if (element.getAttribute("slot")) {
         tooltip.setAttribute("slot", element.getAttribute("slot")!);
       }
@@ -102,7 +104,7 @@ export class UixForgeSparkTooltip extends UixForgeSparkBase {
       style = document.createElement("style");
       tooltip.appendChild(style);
     }
-    style.textContent = this.styles();
+    style.textContent = UIX_TOOLTIP_CSS;
 
     // Update properties in-place
     tooltip.placement = this.placement;
@@ -122,51 +124,5 @@ export class UixForgeSparkTooltip extends UixForgeSparkBase {
     }
 
     this._tooltipElement = tooltip;
-  }
-
-  private styles() {
-    return `
-    wa-tooltip {
-      --wa-tooltip-background-color: var(--uix-tooltip-background-color, var(--secondary-background-color));
-      --wa-tooltip-content-color: var(--uix-tooltip-content-color, var(--primary-text-color));
-      --wa-tooltip-font-family: var(
-        --uix-tooltip-font-family,
-        var(--ha-tooltip-font-family, var(--ha-font-family-body))
-      );
-      --wa-tooltip-font-size: var(--uix-tooltip-font-size, var(--ha-tooltip-font-size, var(--ha-font-size-s)));
-      --wa-tooltip-font-weight: var(
-        --uix-tooltip-font-weight,
-        var(--ha-tooltip-font-weight, var(--ha-font-weight-normal))
-      );
-      --wa-tooltip-line-height: var(
-        --uix-tooltip-line-height,
-        var(--ha-tooltip-line-height, var(--ha-line-height-condensed))
-      );
-      --wa-tooltip-padding: var(--uix-tooltip-padding, 8px);
-      --wa-tooltip-border-radius: var(
-        --uix-tooltip-border-radius,
-        var(--ha-tooltip-border-radius, var(--ha-border-radius-sm))
-      );
-      --wa-tooltip-arrow-size: var(--uix-tooltip-arrow-size, var(--ha-tooltip-arrow-size, 8px));
-      --wa-tooltip-border-width: var(--uix-tooltip-border-width, 0px);
-      --wa-tooltip-border-color: var(--uix-tooltip-border-color);
-      --wa-tooltip-border-style: var(--uix-tooltip-border-style);
-      --max-width: var(--uix-tooltip-max-width, 30ch);
-    }
-    wa-tooltip::part(base__popup) {
-      --show-duration: var(--uix-tooltip-show-duration, 100ms);
-      --hide-duration: var(--uix-tooltip-hide-duration, 100ms);
-      opacity: var(--uix-tooltip-opacity, 1);
-    }
-    wa-tooltip::part(body) {
-      padding: var(--uix-tooltip-padding, 0.25em 0.5em);
-      box-shadow: var(--uix-tooltip-box-shadow, var(--ha-card-box-shadow, none));
-      font-weight: var(--uix-tooltip-font-weight, var(--ha-tooltip-font-weight, normal));
-      font-family: var(--uix-tooltip-font-family, var(--ha-tooltip-font-family, inherit));
-      text-align: var(--uix-tooltip-text-align, center);
-      text-decoration: var(--uix-tooltip-text-decoration, none);
-      text-transform: var(--uix-tooltip-text-transform, none);
-      overflow-wrap: var(--uix-tooltip-overflow-wrap, normal);
-    }`
   }
 }

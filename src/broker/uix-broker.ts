@@ -17,6 +17,7 @@ import {
   UixTileIconConfig,
   updateHaTileIcon,
 } from "../helpers/dom/ha-tile-icon";
+import { stopTooltipHidePropagation, UIX_TOOLTIP_CSS } from "../helpers/dom/ha-tooltip";
 import {
   UixBrokerAnchor,
   UixBrokerConfig,
@@ -32,6 +33,8 @@ type BrokerContext = {
   source: Event | Record<string, any>;
   captured: Record<string, any>;
   results: Record<string, any>;
+  /** The latest element created by a UI directive in this interaction. */
+  previousDirectiveElement?: Element;
   panel?: Record<string, any>;
   realm: "browser" | "shortcut" | "server";
 };
@@ -49,6 +52,7 @@ const BROKER_SELECT_TREE_TIMEOUT_MS = 2_000;
 const BROKER_SELECT_TREE_RETRY_MS = 50;
 const BROKER_BUTTON_WRAPPER_ATTR = "data-uix-broker-button";
 const BROKER_TILE_ICON_ATTR = "data-uix-broker-tile-icon";
+const BROKER_TOOLTIP_ATTR = "data-uix-broker-tooltip";
 
 type BrokerButtonElement = HTMLElement & {
   uixBrokerButtonConfig?: UixButtonConfig;
@@ -57,6 +61,10 @@ type BrokerButtonElement = HTMLElement & {
 
 type BrokerTileIconElement = HTMLElement & {
   uixBrokerTileIconConfig?: UixTileIconConfig;
+  uixBrokerStyleProperties?: string[];
+};
+
+type BrokerTooltipElement = HTMLElement & {
   uixBrokerStyleProperties?: string[];
 };
 
@@ -553,6 +561,7 @@ export class UixBroker {
   private activeInteractions = new Set<UixBrokerInteraction>();
   private buttonWrappers = new Map<UixBrokerDirective, HTMLElement>();
   private tileIcons = new Map<UixBrokerDirective, HTMLElement>();
+  private tooltips = new Map<UixBrokerDirective, HTMLElement>();
   private retainedReferenceObservers = new Map<Node, MutationObserver>();
   private templateCache = new Map<string, TemplateCacheEntry>();
 
@@ -811,7 +820,8 @@ export class UixBroker {
         }
         if (!await this.directiveRulesMatch(interaction, directive, directiveAnchor, context, index)) continue;
         this.debug(interaction, "directive application", { index, directive, anchor: directiveAnchor });
-        await this.executeDirective(directive, directiveAnchor, context);
+        const createdElement = await this.executeDirective(directive, directiveAnchor, context);
+        if (createdElement) context.previousDirectiveElement = createdElement;
         const applied = { index, directive, anchor: directiveAnchor } as Record<string, unknown>;
         if ((directive.type === "template" || directive.type === "javascript") && typeof directive.id === "string") {
           applied.result = context.results[directive.id];
@@ -882,7 +892,7 @@ export class UixBroker {
 
   /**
    * Broker keeps anchors only for the developer console helper and keeps
-   * button wrappers and tile icons only to update previously inserted elements. Neither
+   * buttons, tile icons, and tooltips only to update previously inserted elements. Neither
    * needs to outlive its DOM subtree.
    */
   private pruneDetachedReferences() {
@@ -892,6 +902,9 @@ export class UixBroker {
     }
     for (const [directive, tileIcon] of this.tileIcons) {
       if (!tileIcon.isConnected) this.tileIcons.delete(directive);
+    }
+    for (const [directive, tooltip] of this.tooltips) {
+      if (!tooltip.isConnected) this.tooltips.delete(directive);
     }
     this.refreshRetainedReferenceObservers();
   }
@@ -903,11 +916,12 @@ export class UixBroker {
    */
   private refreshRetainedReferenceObservers() {
     const roots = new Set<Node>();
-    if (this.anchorHistory.length || this.buttonWrappers.size || this.tileIcons.size) {
+    if (this.anchorHistory.length || this.buttonWrappers.size || this.tileIcons.size || this.tooltips.size) {
       roots.add(document);
       this.anchorHistory.forEach(({ anchor }) => roots.add(anchor.getRootNode()));
       this.buttonWrappers.forEach((wrapper) => roots.add(wrapper.getRootNode()));
       this.tileIcons.forEach((tileIcon) => roots.add(tileIcon.getRootNode()));
+      this.tooltips.forEach((tooltip) => roots.add(tooltip.getRootNode()));
     }
 
     this.retainedReferenceObservers.forEach((observer, root) => {
@@ -927,7 +941,7 @@ export class UixBroker {
     directive: UixBrokerDirective,
     interactionAnchor: Element,
   ): Promise<Element | null> {
-    if (directive.type !== "property" && directive.type !== "event" && directive.type !== "call" && directive.type !== "button" && directive.type !== "tile-icon") {
+    if (directive.type !== "property" && directive.type !== "event" && directive.type !== "call" && directive.type !== "button" && directive.type !== "tile-icon" && directive.type !== "tooltip") {
       return interactionAnchor;
     }
     if (directive.type === "event" && directive.target !== undefined && directive.target !== "anchor") {
@@ -1226,7 +1240,7 @@ export class UixBroker {
     });
   }
 
-  private async executeDirective(directive: UixBrokerDirective, anchor: Element, context: BrokerContext) {
+  private async executeDirective(directive: UixBrokerDirective, anchor: Element, context: BrokerContext): Promise<Element | undefined> {
     if (directive.type === "property") {
       this.executeProperty(directive, anchor, context);
     } else if (directive.type === "event") {
@@ -1236,9 +1250,11 @@ export class UixBroker {
     } else if (directive.type === "action") {
       await this.executeAction(directive, anchor, context);
     } else if (directive.type === "button") {
-      await this.executeButton(directive, anchor, context);
+      return this.executeButton(directive, anchor, context);
     } else if (directive.type === "tile-icon") {
-      await this.executeTileIcon(directive, anchor, context);
+      return this.executeTileIcon(directive, anchor, context);
+    } else if (directive.type === "tooltip") {
+      await this.executeTooltip(directive, anchor, context);
     } else if (directive.type === "template") {
       await this.executeTemplate(directive, context);
     } else if (directive.type === "javascript") {
@@ -1398,11 +1414,11 @@ export class UixBroker {
     }));
   }
 
-  private async executeButton(directive: UixBrokerDirective, anchor: Element, context: BrokerContext) {
+  private async executeButton(directive: UixBrokerDirective, anchor: Element, context: BrokerContext): Promise<Element | undefined> {
     const target = await this.resolveButtonTarget(directive, anchor);
-    if (!target) return;
+    if (!target) return undefined;
     const parent = target.parentElement || target.parentNode;
-    if (!parent) return;
+    if (!parent) return undefined;
 
     let wrapper = this.buttonWrappers.get(directive);
     if (wrapper && (!wrapper.isConnected || wrapper.parentNode !== parent)) {
@@ -1453,13 +1469,14 @@ export class UixBroker {
     await this.applyButtonUix(button, directive, context, button.uixBrokerButtonConfig);
     this.placeButton(wrapper, target, directive.before !== undefined);
     this.refreshRetainedReferenceObservers();
+    return button;
   }
 
-  private async executeTileIcon(directive: UixBrokerDirective, anchor: Element, context: BrokerContext) {
+  private async executeTileIcon(directive: UixBrokerDirective, anchor: Element, context: BrokerContext): Promise<Element | undefined> {
     const target = await this.resolveTileIconTarget(directive, anchor);
-    if (!target) return;
+    if (!target) return undefined;
     const parent = target.parentElement || target.parentNode;
-    if (!parent) return;
+    if (!parent) return undefined;
 
     let tileIcon = this.tileIcons.get(directive);
     if (tileIcon && (!tileIcon.isConnected || tileIcon.parentNode !== parent)) {
@@ -1494,6 +1511,116 @@ export class UixBroker {
     await this.applyTileIconUix(brokerTileIcon, directive, context, config);
     this.placeTileIcon(tileIcon, target, directive.before !== undefined);
     this.refreshRetainedReferenceObservers();
+    return tileIcon;
+  }
+
+  private async executeTooltip(directive: UixBrokerDirective, anchor: Element, context: BrokerContext) {
+    const target = await this.resolveTooltipTarget(directive, anchor, context);
+    if (!target) return;
+    const parent = target.parentElement || target.parentNode;
+    if (!parent) return;
+
+    let tooltip = this.tooltips.get(directive);
+    if (tooltip && (!tooltip.isConnected || tooltip.parentNode !== parent)) {
+      tooltip.remove();
+      this.tooltips.delete(directive);
+      tooltip = undefined;
+    }
+
+    if (!tooltip) {
+      tooltip = document.createElement("wa-tooltip");
+      tooltip.setAttribute(BROKER_TOOLTIP_ATTR, "");
+      tooltip.style.setProperty("display", "contents");
+      stopTooltipHidePropagation(tooltip);
+      this.tooltips.set(directive, tooltip);
+    }
+
+    if (!target.id) target.id = `for-uix-broker-tooltip-${Math.random().toString(36).substring(2, 11)}`;
+    (target as HTMLElement).style.setProperty("pointer-events", "auto");
+    (tooltip as any).for = target.id;
+    const slot = target.getAttribute("slot");
+    if (slot) tooltip.setAttribute("slot", slot);
+    else tooltip.removeAttribute("slot");
+
+    let content = tooltip.querySelector("div");
+    if (!content) {
+      content = document.createElement("div");
+      tooltip.appendChild(content);
+    }
+    const resolvedContent = resolveCaptured(directive.content ?? "", context.captured, context.results);
+    if (typeof resolvedContent !== "string") throw new Error("tooltip directive content must be a string");
+    content.innerHTML = resolvedContent;
+
+    let style = tooltip.querySelector("style");
+    if (!style) {
+      style = document.createElement("style");
+      tooltip.appendChild(style);
+    }
+    style.textContent = UIX_TOOLTIP_CSS;
+
+    const placement = resolveCaptured(directive.placement ?? "top", context.captured, context.results);
+    if (typeof placement !== "string") throw new Error("tooltip directive placement must be a string");
+    (tooltip as any).placement = placement;
+    (tooltip as any).skidding = this.tooltipNumber(directive.skidding, 0, "skidding", context);
+    (tooltip as any).distance = this.tooltipNumber(directive.distance, 8, "distance", context);
+    (tooltip as any).showDelay = this.tooltipNumber(directive.show_delay, 150, "show_delay", context);
+    (tooltip as any).hideDelay = this.tooltipNumber(directive.hide_delay, 150, "hide_delay", context);
+    const withoutArrow = resolveCaptured(directive.without_arrow ?? false, context.captured, context.results);
+    if (typeof withoutArrow !== "boolean") throw new Error("tooltip directive without_arrow must be a boolean");
+    tooltip.toggleAttribute("without-arrow", withoutArrow);
+    const brokerTooltip = tooltip as BrokerTooltipElement;
+    this.clearTooltipStyle(brokerTooltip);
+    this.applyTooltipStyle(brokerTooltip, directive.style, context);
+
+    if (tooltip.parentNode !== parent) parent.appendChild(tooltip);
+    this.refreshRetainedReferenceObservers();
+  }
+
+  private clearTooltipStyle(tooltip: BrokerTooltipElement) {
+    tooltip.uixBrokerStyleProperties?.forEach((property) => tooltip.style.removeProperty(property));
+    tooltip.uixBrokerStyleProperties = [];
+  }
+
+  private applyTooltipStyle(tooltip: BrokerTooltipElement, style: unknown, context: BrokerContext) {
+    if (style === undefined) return;
+    const resolvedStyle = resolveCaptured(style, context.captured, context.results);
+    if (!resolvedStyle || typeof resolvedStyle !== "object" || Array.isArray(resolvedStyle)) {
+      throw new Error("tooltip directive style must be an object of CSS property names and values");
+    }
+    for (const [property, value] of Object.entries(resolvedStyle)) {
+      if (!property.trim() || (typeof value !== "string" && typeof value !== "number")) {
+        throw new Error("tooltip directive style values must be strings or numbers");
+      }
+      tooltip.style.setProperty(property, String(value));
+      tooltip.uixBrokerStyleProperties!.push(property);
+    }
+  }
+
+  private tooltipNumber(value: unknown, defaultValue: number, name: string, context: BrokerContext): number {
+    const resolved = resolveCaptured(value ?? defaultValue, context.captured, context.results);
+    if (typeof resolved !== "number" || !Number.isFinite(resolved)) {
+      throw new Error(`tooltip directive ${name} must be a finite number`);
+    }
+    return resolved;
+  }
+
+  private async resolveTooltipTarget(
+    directive: UixBrokerDirective,
+    anchor: Element,
+    context: BrokerContext,
+  ): Promise<Element | null> {
+    const target = directive.for;
+    if (target === undefined) return anchor;
+    if (target === "previous") {
+      if (!context.previousDirectiveElement?.isConnected) {
+        throw new Error("tooltip directive for: previous requires a preceding element directive");
+      }
+      return context.previousDirectiveElement;
+    }
+    if (typeof target !== "string" || !target.trim()) {
+      throw new Error("tooltip directive for must be previous or a non-empty path relative to the directive anchor");
+    }
+    return this.waitForSelectTreeAnchor(target, anchor);
   }
 
   private async resolveButtonTarget(directive: UixBrokerDirective, anchor: Element): Promise<Element | null> {
@@ -1667,6 +1794,8 @@ export class UixBroker {
     this.buttonWrappers.clear();
     this.tileIcons.forEach((tileIcon) => tileIcon.remove());
     this.tileIcons.clear();
+    this.tooltips.forEach((tooltip) => tooltip.remove());
+    this.tooltips.clear();
     this.refreshRetainedReferenceObservers();
   }
 }

@@ -12,6 +12,7 @@ Directives run one at a time after every interaction rule matches. Each directiv
 - [Call](#call) — invoke an element method.
 - [Button](#button) — insert an interactive Home Assistant button.
 - [Tile icon](#tile-icon) — insert an interactive Home Assistant tile icon.
+- [Tooltip](#tooltip) — attach a styled tooltip to an element.
 - [Action](#action) — run a Home Assistant, frontend, or UIX action.
 - [Template](#template) — render a Jinja2 template once and save its result.
 - [JavaScript](#javascript) — synchronously evaluate JavaScript and save its return value.
@@ -19,7 +20,7 @@ Directives run one at a time after every interaction rule matches. Each directiv
 
 ## Directive rules
 
-Add `rules` to any directive except `block` to condition just that directive. The syntax is the same as [interaction rules](./rules.md). For `property`, `event`, `call`, `button`, and `tile-icon`, host-element rules inspect the resolved directive anchor by default. For `action` and `wait`, they inspect the interaction anchor. A rule's own `anchor` remains relative to that default anchor, or can be absolute as usual.
+Add `rules` to any directive except `block` to condition just that directive. The syntax is the same as [interaction rules](./rules.md). For `property`, `event`, `call`, `button`, `tile-icon`, and `tooltip`, host-element rules inspect the resolved directive anchor by default. For `action` and `wait`, they inspect the interaction anchor. A rule's own `anchor` remains relative to that default anchor, or can be absolute as usual.
 
 ```yaml
 directives:
@@ -50,7 +51,7 @@ It is available only in `browser` and `shortcut` realms. The interaction anchor 
 
 ## Directive anchors
 
-`property`, `event`, `call`, `button`, and `tile-icon` directives use the interaction anchor by default. Each can override that default with its own `anchor` configuration. A bare string is relative to the interaction anchor, a string beginning with `&` is a compact absolute document-root `select_tree` path, and `{ select_tree: ... }` is the equivalent long absolute form.
+`property`, `event`, `call`, `button`, `tile-icon`, and `tooltip` directives use the interaction anchor by default. Each can override that default with its own `anchor` configuration. A bare string is relative to the interaction anchor, a string beginning with `&` is a compact absolute document-root `select_tree` path, and `{ select_tree: ... }` is the equivalent long absolute form.
 
 ```yaml
 directives:
@@ -301,6 +302,62 @@ Use `uix` for UIX styling, including styles inside the tile icon's shadow root. 
     - Entity-based tile icons update when Home Assistant state updates.
     - Pointer, mouse, touch, and click events stop at the generated icon. This prevents a containing element's ripple or action handler from reacting while retaining the tile icon's own action and ripple.
     - Broker adds the `data-uix-broker-tile-icon` attribute to each generated tile icon, so it can be selected from UIX styling.
+
+## Tooltip
+
+`tooltip` attaches a Home Assistant `wa-tooltip` beside the selected target. Its options and CSS variables match the [Forge tooltip spark](../forge/sparks/tooltip.md). By default, `for` is the resolved directive anchor; a selector is relative to that anchor and uses the normal UIX `select_tree` syntax.
+
+```yaml
+- type: tooltip
+  content: Open the living-room light controls
+  placement: bottom
+```
+
+Use `for: previous` directly after a UI directive to attach the tooltip to the element it created. It currently works with `button` and `tile-icon`, and will work with later element-producing directives without needing an element selector.
+
+```yaml
+- type: button
+  icon: mdi:lightbulb
+  tap_action:
+    action: toggle
+- type: tooltip
+  for: previous
+  content: Toggle the light
+  placement: bottom
+```
+
+```yaml
+- type: tooltip
+  for: "$ ha-dialog ha-icon-button"
+  content: Close
+  without_arrow: true
+```
+
+Use `style` for a flat mapping of CSS properties. This is particularly useful for setting the `--uix-tooltip-*` variables directly on the generated tooltip.
+
+```yaml
+- type: tooltip
+  for: previous
+  content: Toggle the light
+  style:
+    "--uix-tooltip-background-color": var(--primary-color)
+    "--uix-tooltip-content-color": white
+    "--uix-tooltip-max-width": 24ch
+```
+
+| Key | Type | Default | Description |
+| --- | --- | --- | --- |
+| `for` | string | directive anchor | Target selector, or `previous` for the preceding element-producing directive. |
+| `content` | string | `""` | HTML content of the tooltip body. |
+| `placement` | string | `"top"` | `top`, `top-start`, `top-end`, `bottom`, `bottom-start`, `bottom-end`, `left`, `left-start`, `left-end`, `right`, `right-start`, or `right-end`. |
+| `distance` | number | `8` | Gap in pixels between tooltip and target. |
+| `skidding` | number | `0` | Offset in pixels along the target axis. |
+| `show_delay` | number | `150` | Milliseconds before the tooltip shows. |
+| `hide_delay` | number | `150` | Milliseconds before the tooltip hides. |
+| `without_arrow` | boolean | `false` | Hide the directional arrow. |
+| `style` | object | — | Flat map of CSS property names and string or numeric values, set inline on `wa-tooltip`. |
+
+The tooltip is inserted as a sibling of its target. Set the `--uix-tooltip-*` CSS variables on the target's parent or an ancestor to customise it; see the [Forge tooltip spark CSS variables](../forge/sparks/tooltip.md#css-variables-reference).
 
 ## Action
 

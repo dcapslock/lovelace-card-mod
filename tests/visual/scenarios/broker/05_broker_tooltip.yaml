@@ -1,0 +1,73 @@
+id: broker_tooltip
+description: "UIX Broker interaction for tooltip"
+view_path: broker-tooltip
+
+setup:
+  - type: add_broker_file
+    file_path: uix/test_broker_tooltip.yaml
+
+card:
+  type: heading
+  heading: "Broker Tooltip Test"
+
+interactions:
+  - type: hover
+    root: "ha-list-item-button#sidebar-panel-home"
+    selector: ha-button
+  - type: wait
+    ms: 500
+  - type: hover
+    root: "ha-list-item-button#sidebar-panel-energy"
+    selector: ha-button
+  - type: wait
+    ms: 500
+
+assertions:
+  - type: element_present
+    root: "ha-list-item-button#sidebar-panel-home"
+    selector: wa-tooltip
+  - type: css_property
+    root: "ha-list-item-button#sidebar-panel-home"
+    selector: wa-tooltip
+    property: "display"
+    expected: "contents"
+  - type: css_variable
+    root: "ha-list-item-button#sidebar-panel-home"
+    selector: wa-tooltip
+    property: "--uix-tooltip-border-color"
+    expected: "rgba(0, 0, 0, 0.8)"
+  - type: css_variable
+    root: "ha-list-item-button#sidebar-panel-home"
+    selector: wa-tooltip
+    property: "--uix-tooltip-border-width"
+    expected: "1px"
+  - type: css_variable
+    root: "ha-list-item-button#sidebar-panel-home"
+    selector: wa-tooltip
+    property: "--uix-tooltip-border-style"
+    expected: "solid"
+  - type: element_present
+    root: "ha-list-item-button#sidebar-panel-energy"
+    selector: wa-tooltip
+  - type: css_property
+    root: "ha-list-item-button#sidebar-panel-energy"
+    selector: wa-tooltip
+    property: "display"
+    expected: "contents"
+  - type: css_variable
+    root: "ha-list-item-button#sidebar-panel-energy"
+    selector: wa-tooltip
+    property: "--uix-tooltip-background-color"
+    expected: "rgba(255, 0, 0, 0.8)"
+  - type: css_variable
+    root: "ha-list-item-button#sidebar-panel-energy"
+    selector: wa-tooltip
+    property: "--uix-tooltip-content-color"
+    expected: "white"
+  - type: snapshot
+    name: "61_broker_tooltip"
+    threshold: 0.01
+
+teardown:
+  - type: remove_broker_file
+    file_path: uix/test_broker_tooltip.yaml

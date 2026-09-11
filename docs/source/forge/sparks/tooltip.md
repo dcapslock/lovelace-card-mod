@@ -139,6 +139,7 @@ element:
     The following CSS var defaults were updated in 8.3.0.
 
     - `--uix-tooltip-background-color` (default now `var(--ha-color-surface-default)`)
+    - `--uix-tooltip-content-color` (add `--ha-tooltip-text-color` to default chain)
     - `--uix-tooltip-font-size` (default now `--ha-font-size-m`)
     - `--uix-tooltip-padding` (updated token size default resolving to same 8px)
     - `--uix-tooltip-border-radius` (default now `--ha-border-radius-md`)
@@ -147,7 +148,7 @@ element:
 | CSS variable | Default | Description |
 | ------------ | ------- | ----------- |
 | `--uix-tooltip-background-color` | `var(--ha-tooltip-background-color, var(--ha-color-surface-default))` | Tooltip background color. |
-| `--uix-tooltip-content-color` | `--primary-text-color` | Tooltip text color. |
+| `--uix-tooltip-content-color` | `var(--ha-tooltip-text-color, var(--primary-text-color))` | Tooltip text color. |
 | `--uix-tooltip-font-family` | `--ha-font-family-body` | Font family. |
 | `--uix-tooltip-font-size` | `--ha-font-size-m` | Font size. |
 | `--uix-tooltip-font-weight` | `--ha-font-weight-medium` | Font weight. |

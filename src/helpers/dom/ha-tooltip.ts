@@ -5,7 +5,7 @@ export const UIX_TOOLTIP_STYLE_ATTR = "data-uix-tooltip-style";
 export const UIX_TOOLTIP_CSS = `
   wa-tooltip {
     --wa-tooltip-background-color: var(--uix-tooltip-background-color, var(--ha-tooltip-background-color, var(--ha-color-surface-default)));
-    --wa-tooltip-content-color: var(--uix-tooltip-content-color, var(--primary-text-color));
+    --wa-tooltip-content-color: var(--uix-tooltip-content-color, var(--ha-tooltip-text-color, var(--primary-text-color)));
     --wa-tooltip-font-family: var(
       --uix-tooltip-font-family,
       var(--ha-tooltip-font-family, var(--ha-font-family-body))

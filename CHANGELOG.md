@@ -1,3 +1,9 @@
+## [8.3.0-beta.6](https://github.com/Lint-Free-Technology/uix/compare/v8.3.0-beta.5...v8.3.0-beta.6) (2026-09-11)
+
+### ⚙️ Miscellaneous
+
+* **tooltip:** Change Spark and Broker tooltip defaults to align with Home Assistant defaults, except arrow size is kept at 8px. See docs for updated defaults and vars to use to change. ([21bb260](https://github.com/Lint-Free-Technology/uix/commit/21bb2600786ff3f282162b16cbed624754d386b4))
+
 ## [8.3.0-beta.5](https://github.com/Lint-Free-Technology/uix/compare/v8.3.0-beta.4...v8.3.0-beta.5) (2026-09-11)
 
 ### ⭐ New Features

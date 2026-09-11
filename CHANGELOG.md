@@ -1,3 +1,9 @@
+## [8.3.0-beta.5](https://github.com/Lint-Free-Technology/uix/compare/v8.3.0-beta.4...v8.3.0-beta.5) (2026-09-11)
+
+### ⭐ New Features
+
+* **broker:** Tooltip directive allowing to add tooltip to UI element including `for: previous` to add to a proceeding UI element directive ([#603](https://github.com/Lint-Free-Technology/uix/issues/603)) ([fb5a40c](https://github.com/Lint-Free-Technology/uix/commit/fb5a40ce051a74142e1c7e5a357f576c9f486065))
+
 ## [8.3.0-beta.4](https://github.com/Lint-Free-Technology/uix/compare/v8.3.0-beta.3...v8.3.0-beta.4) (2026-09-10)
 
 ### ⭐ New Features

@@ -46,6 +46,11 @@ assertions:
     selector: wa-tooltip
     property: "--uix-tooltip-border-style"
     expected: "solid"
+  - type: object_property_text_equals
+    root: "ha-list-item-button#sidebar-panel-home"
+    selector: wa-tooltip
+    property: trigger
+    expected: focus
   - type: element_present
     root: "ha-list-item-button#sidebar-panel-energy"
     selector: wa-tooltip
@@ -64,6 +69,16 @@ assertions:
     selector: wa-tooltip
     property: "--uix-tooltip-content-color"
     expected: "white"
+  - type: object_property_text_equals
+    root: "ha-list-item-button#sidebar-panel-energy"
+    selector: wa-tooltip
+    property: trigger
+    expected: manual
+  - type: object_property_text_equals
+    root: "ha-list-item-button#sidebar-panel-energy"
+    selector: wa-tooltip
+    property: open
+    expected: "true"
   - type: snapshot
     name: "61_broker_tooltip"
     threshold: 0.01

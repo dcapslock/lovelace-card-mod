@@ -18,10 +18,14 @@ import {
   updateHaTileIcon,
 } from "../helpers/dom/ha-tile-icon";
 import {
+  configureTooltipActivation,
+  normalizeTooltipTrigger,
   stopTooltipHidePropagation,
+  UIX_TOOLTIP_DEFAULT_TRIGGER,
   UIX_TOOLTIP_CONTENT_ATTR,
   UIX_TOOLTIP_CSS,
   UIX_TOOLTIP_STYLE_ATTR,
+  UixTooltipElement,
 } from "../helpers/dom/ha-tooltip";
 import {
   UixBrokerAnchor,
@@ -69,11 +73,12 @@ type BrokerTileIconElement = HTMLElement & {
   uixBrokerStyleProperties?: string[];
 };
 
-type BrokerTooltipElement = HTMLElement & {
+type BrokerTooltipElement = UixTooltipElement & {
   uixBrokerStyleProperties?: string[];
 };
 
 type BrokerTooltip = {
+  cleanupActivation?: () => void;
   element: BrokerTooltipElement;
   target: Element;
 };
@@ -1595,12 +1600,24 @@ export class UixBroker {
     (tooltip as any).distance = this.tooltipNumber(directive.distance, 8, "distance", context);
     (tooltip as any).showDelay = this.tooltipNumber(directive.show_delay, 150, "show_delay", context);
     (tooltip as any).hideDelay = this.tooltipNumber(directive.hide_delay, 150, "hide_delay", context);
+    const trigger = normalizeTooltipTrigger(
+      resolveCaptured(directive.trigger ?? UIX_TOOLTIP_DEFAULT_TRIGGER, context.captured, context.results),
+      "tooltip directive trigger",
+    );
+    let open: boolean | undefined;
+    if (directive.open !== undefined) {
+      open = resolveCaptured(directive.open, context.captured, context.results);
+      if (typeof open !== "boolean") throw new Error("tooltip directive open must be a boolean");
+    }
     const withoutArrow = resolveCaptured(directive.without_arrow ?? false, context.captured, context.results);
     if (typeof withoutArrow !== "boolean") throw new Error("tooltip directive without_arrow must be a boolean");
     tooltip.toggleAttribute("without-arrow", withoutArrow);
     this.clearTooltipStyle(tooltip);
     tooltip.style.setProperty("display", "contents");
     this.applyTooltipStyle(tooltip, directive.style, context);
+    brokerTooltip.cleanupActivation?.();
+    brokerTooltip.cleanupActivation = configureTooltipActivation(tooltip, target, trigger);
+    if (open !== undefined) tooltip.open = open;
 
     if (tooltip.parentNode !== parent) parent.appendChild(tooltip);
     this.refreshRetainedReferenceObservers();
@@ -1664,6 +1681,7 @@ export class UixBroker {
   }
 
   private removeTooltip(directive: UixBrokerDirective, tooltip: BrokerTooltip) {
+    tooltip.cleanupActivation?.();
     tooltip.element.remove();
     this.releaseTooltipTarget(tooltip.target);
     this.tooltips.delete(directive);

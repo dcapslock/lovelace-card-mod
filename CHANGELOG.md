@@ -1,3 +1,9 @@
+## [8.3.0-beta.8](https://github.com/Lint-Free-Technology/uix/compare/v8.3.0-beta.7...v8.3.0-beta.8) (2026-09-13)
+
+### ⭐ New Features
+
+* **tooltip:** add trigger options and preserve content hover ([1dc4f74](https://github.com/Lint-Free-Technology/uix/commit/1dc4f74c5fb1e43d14e4702f94f4bfe244db99cc))
+
 ## [8.3.0-beta.7](https://github.com/Lint-Free-Technology/uix/compare/v8.3.0-beta.6...v8.3.0-beta.7) (2026-09-11)
 
 ### ⚙️ Miscellaneous

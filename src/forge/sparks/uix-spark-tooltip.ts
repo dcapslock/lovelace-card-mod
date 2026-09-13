@@ -1,9 +1,13 @@
 import { PropertyValues } from "lit";
 import {
+  configureTooltipActivation,
+  normalizeTooltipTrigger,
   stopTooltipHidePropagation,
+  UIX_TOOLTIP_DEFAULT_TRIGGER,
   UIX_TOOLTIP_CONTENT_ATTR,
   UIX_TOOLTIP_CSS,
   UIX_TOOLTIP_STYLE_ATTR,
+  UixTooltipElement,
 } from "../../helpers/dom/ha-tooltip";
 import { UixForgeSparkBase } from "./uix-spark-base";
 
@@ -18,7 +22,12 @@ export class UixForgeSparkTooltip extends UixForgeSparkBase {
   private withoutArrow: boolean = false;
   private showDelay: number = 150;
   private hideDelay: number = 150;
+  private trigger: string = UIX_TOOLTIP_DEFAULT_TRIGGER;
+  private open: boolean | undefined;
   private _tooltipElement: Element | null = null;
+  private _cleanupActivation?: () => void;
+  private _openWasConfigured = false;
+  private _appliedOpen: boolean | undefined;
 
   constructor(controller: any, config: Record<string, any>) {
     super(controller, config);
@@ -34,11 +43,19 @@ export class UixForgeSparkTooltip extends UixForgeSparkBase {
     this.for = config.for || this.defaultTarget();
     this.content = config.content || "";
     this.placement = config.placement || "top";
-    this.skidding = config.skidding || 0;
-    this.distance = config.distance || 8;
-    this.showDelay = config.show_delay || 150;
-    this.hideDelay = config.hide_delay || 150;
-    this.withoutArrow = config.without_arrow || false;
+    this.skidding = config.skidding ?? 0;
+    this.distance = config.distance ?? 8;
+    this.showDelay = config.show_delay ?? 150;
+    this.hideDelay = config.hide_delay ?? 150;
+    this.withoutArrow = config.without_arrow ?? false;
+    this.trigger = normalizeTooltipTrigger(
+      config.trigger ?? UIX_TOOLTIP_DEFAULT_TRIGGER,
+      "tooltip spark trigger",
+    );
+    if (config.open !== undefined && typeof config.open !== "boolean") {
+      throw new Error("tooltip spark open must be a boolean");
+    }
+    this.open = config.open;
   }
 
   updated(_changedProperties: PropertyValues): void {
@@ -57,10 +74,14 @@ export class UixForgeSparkTooltip extends UixForgeSparkBase {
   }
 
   private _remove() {
+    this._cleanupActivation?.();
+    this._cleanupActivation = undefined;
     if (this._tooltipElement) {
       this._tooltipElement.remove();
       this._tooltipElement = null;
     }
+    this._openWasConfigured = false;
+    this._appliedOpen = undefined;
   }
 
   private async _attach(generation: number) {
@@ -78,14 +99,13 @@ export class UixForgeSparkTooltip extends UixForgeSparkBase {
     // If our tracked tooltip is no longer in this parent, remove it and start fresh
     const existingInParent = ((parent as Element).querySelector?.("wa-tooltip") as any)?.for == element.id;
     if (this._tooltipElement && !existingInParent) {
-      this._tooltipElement.remove();
-      this._tooltipElement = null;
+      this._remove();
     }
 
     const isNew = !this._tooltipElement;
-    let tooltip = this._tooltipElement as any;
+    let tooltip = this._tooltipElement as UixTooltipElement | null;
     if (!tooltip) {
-      tooltip = document.createElement("wa-tooltip");
+      tooltip = document.createElement("wa-tooltip") as UixTooltipElement;
       tooltip.for = element.id;
       tooltip.style.setProperty("display", "contents");
       stopTooltipHidePropagation(tooltip);
@@ -128,6 +148,18 @@ export class UixForgeSparkTooltip extends UixForgeSparkBase {
     } else {
       tooltip.removeAttribute("without-arrow");
     }
+    this._cleanupActivation?.();
+    this._cleanupActivation = configureTooltipActivation(tooltip, element, this.trigger);
+
+    const openConfigured = this.open !== undefined;
+    if (
+      (openConfigured && (!this._openWasConfigured || this._appliedOpen !== this.open)) ||
+      (!openConfigured && this._openWasConfigured)
+    ) {
+      tooltip.open = this.open ?? false;
+    }
+    this._openWasConfigured = openConfigured;
+    this._appliedOpen = this.open;
 
     // Only insert into the DOM when newly created
     if (isNew) {

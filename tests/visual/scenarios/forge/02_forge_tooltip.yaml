@@ -19,6 +19,7 @@ card:
       - type: tooltip
         for: hui-tile-card
         content: "This is a UIX tooltip"
+        trigger: hover focus
   element:
     type: tile
     entity: "light.bed_light"
@@ -28,6 +29,12 @@ interactions:
   - type: hover
     selector: uix-forge
     settle_ms: 800
+  # Regression: Web Awesome 3.7 hides on this transition because its :hover
+  # check races when the pointer enters slotted tooltip content.
+  - type: hover
+    root: uix-forge
+    selector: div[data-uix-tooltip-content]
+    settle_ms: 300
 
 assertions:
   - type: element_present
@@ -40,6 +47,19 @@ assertions:
     root: uix-forge
     selector: wa-tooltip
     expected: "This is a UIX tooltip"
+
+  - type: object_property_text_equals
+    root: uix-forge
+    selector: wa-tooltip
+    property: open
+    expected: "true"
+
+  # UIX owns the configured hover trigger while Web Awesome retains focus.
+  - type: object_property_text_equals
+    root: uix-forge
+    selector: wa-tooltip
+    property: trigger
+    expected: focus
 
   # Snapshot is taken after hover so the tooltip is visible.
   - type: snapshot

@@ -345,6 +345,16 @@ Use `style` for a flat mapping of CSS properties. This is particularly useful fo
     "--uix-tooltip-max-width": 24ch
 ```
 
+`trigger` accepts Web Awesome's space-separated `hover`, `focus`, `click`, and `manual` activation modes. When `hover` is enabled, the tooltip remains open while the pointer moves from the target into the tooltip body, allowing constrained content to be scrolled. `manual` does not activate automatically; use `open` to set its state when the directive runs.
+
+```yaml
+- type: tooltip
+  for: previous
+  trigger: manual
+  open: true
+  content: This tooltip is opened by the directive
+```
+
 | Key | Type | Default | Description |
 | --- | --- | --- | --- |
 | `for` | string | directive anchor | Target selector, or `previous` for the preceding element-producing directive. |
@@ -354,6 +364,8 @@ Use `style` for a flat mapping of CSS properties. This is particularly useful fo
 | `skidding` | number | `0` | Offset in pixels along the target axis. |
 | `show_delay` | number | `150` | Milliseconds before the tooltip shows. |
 | `hide_delay` | number | `150` | Milliseconds before the tooltip hides. |
+| `trigger` | string | `"hover focus"` | Space-separated activation modes: `hover`, `focus`, `click`, or `manual`. |
+| `open` | boolean | `false` | Set the tooltip's open state when the directive runs. This is particularly useful with `trigger: manual`. |
 | `without_arrow` | boolean | `false` | Hide the directional arrow. |
 | `style` | object | — | Flat map of CSS property names and string or numeric values, set inline on `wa-tooltip`. |
 

@@ -56,10 +56,23 @@ Only the **first** element matched by `for` gets the tooltip.
 | `skidding` | number | | `0` | Offset in pixels along the target element's axis. |
 | `show_delay` | number | | `150` | Milliseconds to wait before showing the tooltip. |
 | `hide_delay` | number | | `150` | Milliseconds to wait before hiding the tooltip. |
+| `trigger` | string | | `"hover focus"` | Space-separated activation modes: `hover`, `focus`, `click`, or `manual`. |
+| `open` | boolean | | `false` | Set the tooltip's open state when the spark configuration changes. This is particularly useful with `trigger: manual`. |
 | `without_arrow` | boolean | | `false` | Set to `true` to hide the directional arrow. |
 
 !!! tip
     You can use the [`uix_forge_path()`](../../concepts/dom.md#uix_forge_path0-forge-helper) DOM helper to take the guesswork out of finding the right path for `for`.
+
+When `hover` is enabled, the tooltip remains open while the pointer moves from the target into the tooltip body. This allows content constrained with `--uix-tooltip-max-height` and `--uix-tooltip-overflow: auto` to be scrolled. `manual` does not activate automatically; set `open: true` to open it from the spark configuration.
+
+```yaml
+forge:
+  sparks:
+    - type: tooltip
+      trigger: manual
+      open: true
+      content: This tooltip is opened by the spark configuration
+```
 
 ## Templates in content
 
@@ -160,6 +173,9 @@ element:
 | `--uix-tooltip-border-color` | — | Border color (unset by default). |
 | `--uix-tooltip-border-style` | — | Border style (unset by default). |
 | `--uix-tooltip-max-width` | `30ch` | Maximum width of the tooltip. |
+| `--uix-tooltip-max-height` | `none` | Maximum height of the tooltip body. |
+| `--uix-tooltip-overflow` | `visible` | Overflow behaviour for the tooltip body. Use `auto` to scroll constrained content. |
+| `--uix-tooltip-overflow-wrap` | `normal` | Overflow-wrap behaviour. |
 | `--uix-tooltip-show-duration` | `100ms` | Duration of the show animation. |
 | `--uix-tooltip-hide-duration` | `100ms` | Duration of the hide animation. |
 | `--uix-tooltip-opacity` | `1` | Tooltip opacity. |
@@ -167,4 +183,3 @@ element:
 | `--uix-tooltip-text-align` | `center` | Text alignment. |
 | `--uix-tooltip-text-decoration` | `none` | Text decoration. |
 | `--uix-tooltip-text-transform` | `none` | Text transform. |
-| `--uix-tooltip-overflow-wrap` | `normal` | Overflow-wrap behaviour. |

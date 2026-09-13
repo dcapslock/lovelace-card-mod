@@ -24,6 +24,7 @@ uix_broker:
         for: previous
         content: "Go to tools"
         placement: top
+        trigger: hover focus
         hide_delay: 20000
         style:
           "--uix-tooltip-border-color": "rgba(0, 0, 0, 0.8)"
@@ -54,6 +55,8 @@ uix_broker:
         for: previous
         content: "Go to tools"
         placement: bottom
+        trigger: manual
+        open: true
         without_arrow: true
         hide_delay: 20000
         style:
